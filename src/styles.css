@@ -66,6 +66,12 @@
   --color-brand-soft: var(--brand-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
+  --color-event-local: var(--event-local);
+  --color-event-local-foreground: var(--event-local-foreground);
+  --color-event-holiday: var(--event-holiday);
+  --color-event-holiday-foreground: var(--event-holiday-foreground);
+  --color-event-seasonal: var(--event-seasonal);
+  --color-event-seasonal-foreground: var(--event-seasonal-foreground);
   --font-sans: "Roboto", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Roboto", ui-sans-serif, system-ui, sans-serif;
   --shadow-card: 0 1px 2px oklch(0.2 0.02 264 / 0.05), 0 1px 3px oklch(0.2 0.02 264 / 0.06);
@@ -113,6 +119,12 @@
   --brand-soft: oklch(0.96 0.035 255);
   --warning: oklch(0.55 0.16 65);
   --warning-soft: oklch(0.96 0.045 78);
+  --event-local: oklch(0.94 0.038 255);
+  --event-local-foreground: oklch(0.47 0.2 258);
+  --event-holiday: oklch(0.95 0.042 15);
+  --event-holiday-foreground: oklch(0.52 0.19 18);
+  --event-seasonal: oklch(0.94 0.068 150);
+  --event-seasonal-foreground: oklch(0.46 0.125 152);
 }
 
 .dark {
@@ -154,6 +166,12 @@
   --brand-soft: oklch(0.28 0.05 255);
   --warning: oklch(0.78 0.14 75);
   --warning-soft: oklch(0.28 0.055 65);
+  --event-local: oklch(0.3 0.06 255);
+  --event-local-foreground: oklch(0.84 0.09 250);
+  --event-holiday: oklch(0.3 0.06 18);
+  --event-holiday-foreground: oklch(0.84 0.09 20);
+  --event-seasonal: oklch(0.3 0.055 152);
+  --event-seasonal-foreground: oklch(0.84 0.09 152);
 }
 
 @layer base {
