@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { CalendarRange, Check, ChevronDown, GitCompareArrows, Layers, Mail, MessageSquare, Sparkles, TrendingDown, TrendingUp, Users } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Button } from "@/components/ui/button";
@@ -134,7 +133,7 @@ function CategoryDetail({ release, periods, period, compare, date }: { release: 
             <div className="mt-4 flex items-center gap-2"><Users size={13} className="shrink-0 text-muted-foreground" /><p className="text-[11.5px] text-card-foreground">{adoptionSentence(release.id, name, id)}</p></div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-brand" style={{ width: `${(used / TOTAL_PROPERTIES) * 100}%` }} /></div>
             <div className={`mt-4 flex gap-2 border-l-2 p-3 ${d < 0 ? "border-warning bg-warning-soft/40" : "border-brand bg-brand-soft/35"}`}><Sparkles size={14} className={`mt-0.5 shrink-0 ${d < 0 ? "text-warning" : "text-brand"}`} /><div><p className="text-[10px] font-semibold uppercase text-muted-foreground">Content insight</p><p className="mt-1 text-[11.5px] leading-5 text-card-foreground">{d < 0 && PAST_CAMPAIGN_COPY[id] ? `A previous ${name} version performed better. ${PAST_CAMPAIGN_COPY[id].learned}` : periodInsight(period, b, s)}</p></div></div>
-            {d < 0 && PAST_CAMPAIGN_COPY[id] && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><p className="max-w-[260px] text-[11px] leading-4 text-muted-foreground">Review the current and past copy before using what worked.</p><Button size="sm" variant="brand" onClick={() => setReviewId(id)}><GitCompareArrows size={14} />Review & use this version</Button></div>}
+            {d < 0 && compare === "previous" && PAST_CAMPAIGN_COPY[id] && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><p className="max-w-[260px] text-[11px] leading-4 text-muted-foreground">Review the current and past copy before using what worked.</p><Button size="sm" variant="brand" onClick={() => setReviewId(id)}><GitCompareArrows size={14} />Review & use this version</Button></div>}
           </div></article>;
         })}
       </div>}
