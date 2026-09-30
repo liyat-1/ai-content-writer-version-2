@@ -101,49 +101,12 @@ export function EventsPage() {
         </header>
         <div className="mb-5 mt-5 flex flex-wrap items-center gap-3">
           <div className="relative min-w-[220px] max-w-sm flex-1"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search events" className="pl-8" /></div>
+          <label className="flex cursor-pointer items-center gap-2 text-[12px] text-card-foreground"><input type="checkbox" checked={hasHotelCalendar} onChange={(e) => calendar.setHotelCalendar(e.target.checked)} className="size-3.5 accent-[var(--brand)]" />Hotel calendar</label>
           <p className="ml-auto text-[12px] text-muted-foreground">{monthEvents.length} {monthEvents.length === 1 ? "moment" : "moments"} in view</p>
         </div>
         {monthEvents.length > 0 && <section className="mb-6" aria-label="This month's moments"><p className="mb-3 text-[10px] font-semibold uppercase text-brand">At a glance · {monthLabel}</p><div className="flex gap-3 overflow-x-auto pb-2">{monthEvents.map((e) => { const Icon = EVENT_ICONS[e.type] ?? CalendarDays; const image = e.image ?? EVENT_IMAGES[e.id]; return <Button key={e.id} variant="outline" onClick={() => { setSelectedId(e.id); setDraft(null); }} className={`h-auto w-[220px] shrink-0 flex-col items-stretch gap-0 overflow-hidden rounded-md p-0 text-left ${selected?.id === e.id ? "border-brand ring-1 ring-brand" : ""}`}><span className="relative block h-24">{image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <span className={`grid h-full place-items-center ${TYPE_STYLE[e.type]}`}><Icon size={24} /></span>}</span><span className="block min-w-0 px-3 py-2.5"><span className="block truncate text-[12px] font-semibold text-card-foreground">{e.name}</span><span className="mt-0.5 block text-[10.5px] font-normal text-muted-foreground">{fmtRange(e.start, e.end)} · {e.type}</span></span></Button>; })}</div></section>}
-        <div className="grid gap-5 lg:grid-cols-[228px_minmax(0,1fr)_300px]">
-          <aside className="flex flex-col gap-4" aria-label="Calendar controls">
-            <div className="rounded-lg border border-border bg-card p-3 shadow-card">
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-[12px] font-semibold text-card-foreground">{monthLabel}</p>
-                <div className="flex gap-0.5">
-                  <Button variant="ghost" size="icon" className="size-6" aria-label="Previous month" onClick={() => step(-1)}><ChevronLeft size={13} /></Button>
-                  <Button variant="ghost" size="icon" className="size-6" aria-label="Next month" onClick={() => step(1)}><ChevronRight size={13} /></Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-7 text-center text-[9px] font-semibold uppercase text-muted-foreground">{WEEKDAYS.map((d) => <span key={d} className="py-0.5">{d[0]}</span>)}</div>
-              <div className="grid grid-cols-7">
-                {cells.map((date) => {
-                  const inMonth = Number(date.slice(5, 7)) - 1 === month;
-                  const isToday = date === TODAY;
-                  const dayEvents = filtered.filter((e) => e.start <= date && e.end >= date);
-                  return (
-                    <button key={date} type="button" onClick={() => { if (dayEvents[0]) { setSelectedId(dayEvents[0].id); setDraft(null); } }} className={`flex h-8 flex-col items-center justify-center rounded-full transition-colors ${isToday ? "bg-brand font-bold text-brand-foreground" : inMonth ? "text-card-foreground hover:bg-accent" : "text-muted-foreground/50 hover:bg-accent"}`} aria-label={date}>
-                      <span className={`text-[10.5px] ${isToday ? "" : "font-medium"}`}>{Number(date.slice(8, 10))}</span>
-                      <span className="mt-0.5 flex h-1 gap-0.5">{dayEvents.slice(0, 3).map((e) => <i key={e.id} className={`size-1 rounded-full ${isToday ? "bg-brand-foreground" : TYPE_DOT[e.type]}`} />)}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="rounded-lg border border-border bg-card p-3.5 shadow-card">
-              <p className="mb-2 text-[10px] font-semibold uppercase text-muted-foreground">Categories</p>
-              {ALL_TYPES.map((t) => (
-                <label key={t} className="flex cursor-pointer items-center gap-2 py-1 text-[12px] text-card-foreground">
-                  <input type="checkbox" checked={types[t]} onChange={() => toggleType(t)} className="size-3.5 accent-[var(--brand)]" />
-                  <span className={`size-2 rounded-full ${TYPE_DOT[t]}`} />{t}
-                  <span className="ml-auto text-[11px] text-muted-foreground">{qFiltered.filter((e) => e.type === t).length}</span>
-                </label>
-              ))}
-            </div>
-            <div className="rounded-lg border border-border bg-card p-3.5 shadow-card">
-              <p className="mb-2 text-[10px] font-semibold uppercase text-muted-foreground">Calendars</p>
-              <label className="flex cursor-pointer items-center gap-2 py-1 text-[12px] text-card-foreground"><input type="checkbox" checked={hasHotelCalendar} onChange={(e) => calendar.setHotelCalendar(e.target.checked)} className="size-3.5 accent-[var(--brand)]" />Hotel calendar connected</label>
-            </div>
-          </aside>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+
           <section className="overflow-hidden rounded-lg border border-border bg-card shadow-card" aria-label="Calendar">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
               <div className="flex items-center gap-0.5">
