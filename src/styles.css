@@ -247,3 +247,9 @@
 @media (prefers-reduced-motion: reduce) {
   .starter-rise { animation: none; }
 }
+
+@keyframes starter-float { 0%,100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+@keyframes starter-drift { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(40px,-30px) scale(1.15); } }
+@utility starter-float { animation: starter-float 5s ease-in-out infinite; }
+@utility starter-orb { animation: starter-drift 14s ease-in-out infinite; filter: blur(60px); }
+@media (prefers-reduced-motion: reduce) { .starter-float, .starter-orb { animation: none; } }

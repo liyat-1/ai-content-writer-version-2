@@ -18,8 +18,14 @@ export function StarterScreen({ onLocalize, onKeep }: { onLocalize: () => void; 
   return (
     <section aria-label="Plan with AI" className="ai-surface relative -mx-4 overflow-hidden px-4 pb-16 pt-12 text-center sm:-mx-6 sm:px-6">
       <div aria-hidden className="ai-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(70%_60%_at_50%_35%,black,transparent)]" />
+      <div aria-hidden className="starter-orb pointer-events-none absolute -left-20 top-10 size-72 rounded-full bg-brand/25" />
+      <div aria-hidden className="starter-orb pointer-events-none absolute -right-16 top-40 size-80 rounded-full bg-event-holiday" style={{ animationDelay: "-6s" }} />
+      <div aria-hidden className="starter-orb pointer-events-none absolute bottom-0 left-1/3 size-64 rounded-full bg-event-seasonal" style={{ animationDelay: "-3s" }} />
       <div className="relative mx-auto max-w-4xl">
-        <p className="starter-rise text-[11px] font-semibold uppercase tracking-wide text-brand">Holiday Inn Times Square · New York City</p>
+        <p className="starter-rise inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand shadow-sm backdrop-blur-sm">
+          <span className="relative flex size-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-60" /><span className="relative inline-flex size-2 rounded-full bg-brand" /></span>
+          Holiday Inn Times Square · New York City
+        </p>
         <h1 className="starter-rise mt-3 font-display text-[34px] font-semibold leading-tight text-card-foreground sm:text-[46px]" style={{ animationDelay: "60ms" }}>
           Plan your <span className="ai-text">upcoming</span> content
         </h1>
@@ -31,7 +37,8 @@ export function StarterScreen({ onLocalize, onKeep }: { onLocalize: () => void; 
             const Icon: LucideIcon = EVENT_ICONS[event.type] ?? Sparkle; const image = event.image ?? EVENT_IMAGES[event.id];
             return (
               <div key={event.id} className="starter-rise mx-0.5 sm:mx-1.5" style={{ animationDelay: `${180 + i * 90}ms`, zIndex: i === 1 || i === 2 ? 10 : 5 }}>
-                <article className={`group w-40 rounded-lg p-3 text-left shadow-lift transition-all duration-200 hover:z-20 hover:-translate-y-2 hover:rotate-0 sm:w-48 sm:p-4 ai-edge ${FAN[i]}`}>
+                <div className="starter-float" style={{ animationDelay: `${i * -1.2}s` }}>
+                <article className={`group w-40 rounded-lg p-3 text-left shadow-lift transition-all duration-200 hover:z-20 hover:-translate-y-2 hover:rotate-0 hover:scale-105 sm:w-48 sm:p-4 ai-edge ${FAN[i]}`}>
                   <div className="relative h-24 overflow-hidden rounded-md sm:h-28">
                     {image ? (
                       <img src={image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -49,6 +56,7 @@ export function StarterScreen({ onLocalize, onKeep }: { onLocalize: () => void; 
                     <span className="text-muted-foreground">{daysLabel(event.start)}</span>
                   </div>
                 </article>
+                </div>
               </div>
             );
           })}
