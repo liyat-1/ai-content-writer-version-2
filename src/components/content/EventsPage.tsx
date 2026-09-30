@@ -20,6 +20,7 @@ const TYPE_DOT: Record<EventType, string> = {
 const ALL_TYPES: EventType[] = ["Holiday", "Local event", "Seasonal"];
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DAY = 86_400_000;
+const bars_pos = new Map<string, { s: number; en: number }>();
 const empty = (): CalendarEvent => ({ id: `m-${Date.now()}`, name: "", start: TODAY, end: TODAY, type: "Local event", source: "Added manually" });
 
 /** Monday-start month grid of ISO dates. */
@@ -105,33 +106,57 @@ export function EventsPage() {
           <p className="ml-auto text-[12px] text-muted-foreground">{monthEvents.length} {monthEvents.length === 1 ? "moment" : "moments"} in view</p>
         </div>
         {monthEvents.length > 0 && <section className="mb-6" aria-label="This month's moments"><p className="mb-3 text-[10px] font-semibold uppercase text-brand">At a glance · {monthLabel}</p><div className="flex gap-3 overflow-x-auto pb-2">{monthEvents.map((e) => { const Icon = EVENT_ICONS[e.type] ?? CalendarDays; const image = e.image ?? EVENT_IMAGES[e.id]; return <Button key={e.id} variant="outline" onClick={() => { setSelectedId(e.id); setDraft(null); }} className={`h-auto w-[220px] shrink-0 flex-col items-stretch gap-0 overflow-hidden rounded-md p-0 text-left ${selected?.id === e.id ? "border-brand ring-1 ring-brand" : ""}`}><span className="relative block h-24">{image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <span className={`grid h-full place-items-center ${TYPE_STYLE[e.type]}`}><Icon size={24} /></span>}</span><span className="block min-w-0 px-3 py-2.5"><span className="block truncate text-[12px] font-semibold text-card-foreground">{e.name}</span><span className="mt-0.5 block text-[10.5px] font-normal text-muted-foreground">{fmtRange(e.start, e.end)} · {e.type}</span></span></Button>; })}</div></section>}
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">{(() => { bars_pos.clear(); return null; })()}
 
-          <section className="overflow-hidden rounded-lg border border-border bg-card shadow-card" aria-label="Calendar">
-            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-              <div className="flex items-center gap-0.5">
-                <Button variant="ghost" size="icon" className="size-7" aria-label="Previous month" onClick={() => step(-1)}><ChevronLeft size={15} /></Button>
-                <p className="min-w-[150px] px-1 text-center text-[15px] font-semibold text-card-foreground">{monthLabel}</p>
-                <Button variant="ghost" size="icon" className="size-7" aria-label="Next month" onClick={() => step(1)}><ChevronRight size={15} /></Button>
-                <Button variant="outline" size="sm" className="ml-2 h-7 rounded-full px-3 text-[12px]" onClick={goToday}>Today</Button>
+          <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card" aria-label="Calendar">
+            <div className="flex items-center justify-between gap-2 px-5 pb-3 pt-5">
+              <p className="font-display text-[22px] font-semibold text-card-foreground">{monthLabel}</p>
+              <div className="flex items-center gap-1 rounded-full bg-muted/60 p-1">
+                <Button variant="ghost" size="icon" className="size-7 rounded-full" aria-label="Previous month" onClick={() => step(-1)}><ChevronLeft size={15} /></Button>
+                <Button variant="ghost" size="sm" className="h-7 rounded-full bg-card px-3 text-[12px] shadow-sm" onClick={goToday}>Today</Button>
+                <Button variant="ghost" size="icon" className="size-7 rounded-full" aria-label="Next month" onClick={() => step(1)}><ChevronRight size={15} /></Button>
               </div>
             </div>
-            <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-center text-[10px] font-semibold uppercase text-muted-foreground">{WEEKDAYS.map((d) => <span key={d} className="py-1.5">{d}</span>)}</div>
-            <div className="grid grid-cols-7">
-              {cells.map((date) => {
-                const inMonth = Number(date.slice(5, 7)) - 1 === month;
-                const isToday = date === TODAY;
-                const dayEvents = eventsOn(date);
+            <div className="grid grid-cols-7 px-3 text-center text-[10.5px] font-medium tracking-wide text-muted-foreground">{WEEKDAYS.map((d) => <span key={d} className="py-2">{d}</span>)}</div>
+            <div className="px-3 pb-3">
+              {Array.from({ length: cells.length / 7 }, (_, w) => {
+                const week = cells.slice(w * 7, w * 7 + 7);
+                const lanes: string[][] = [];
+                const bars = filtered
+                  .filter((e) => e.start <= week[6] && e.end >= week[0])
+                  .sort((a, b) => a.start.localeCompare(b.start))
+                  .map((e) => {
+                    const s = Math.max(0, week.indexOf(e.start < week[0] ? week[0] : e.start));
+                    const endIdx = e.end > week[6] ? 6 : week.indexOf(e.end);
+                    const en = endIdx < 0 ? 6 : endIdx;
+                    let lane = lanes.findIndex((l) => l.every((id) => { const o = bars_pos.get(id)!; return o.en < s || o.s > en; }));
+                    if (lane < 0) { lane = lanes.length; lanes.push([]); }
+                    lanes[lane].push(e.id); bars_pos.set(e.id, { s, en });
+                    return { e, s, en, lane, cont: e.start < week[0], more: e.end > week[6] };
+                  });
+                const shown = bars.filter((b) => b.lane < 3);
                 return (
-                  <div key={date} className={`min-h-[104px] border-b border-r border-border p-1.5 last:border-r-0 ${inMonth ? "bg-card" : "bg-canvas"}`}>
-                    <p className="mb-1 flex justify-end">{isToday ? <span className="grid size-[22px] place-items-center rounded-full bg-brand text-[11px] font-bold text-brand-foreground">{Number(date.slice(8, 10))}</span> : <span className={`grid size-[22px] place-items-center text-[11px] font-semibold ${inMonth ? "text-card-foreground" : "text-muted-foreground/60"}`}>{Number(date.slice(8, 10))}</span>}</p>
-                    <div className="space-y-1">
-                      {dayEvents.slice(0, 3).map((e) => (
-                        <Button key={e.id} variant="ghost" size="sm" onClick={() => { setSelectedId(e.id); setDraft(null); }} className={`block h-6 w-full truncate rounded-md px-1.5 py-0.5 text-left text-[10px] font-medium transition-colors hover:opacity-80 ${TYPE_STYLE[e.type]} ${inMonth ? "" : "opacity-45"} ${selected?.id === e.id ? "ring-2 ring-inset ring-brand" : ""}`} title={e.name}>
-                          <span className="block truncate">{e.name}</span>
-                        </Button>
+                  <div key={w} className="relative grid min-h-[112px] grid-cols-7 border-t border-border/50 first:border-t-0">
+                    {week.map((date, i) => {
+                      const inMonth = Number(date.slice(5, 7)) - 1 === month;
+                      const isToday = date === TODAY;
+                      const hidden = bars.filter((b) => b.lane >= 3 && b.s <= i && b.en >= i).length;
+                      return (
+                        <div key={date} className={`rounded-xl p-2 transition-colors hover:bg-muted/40 ${i >= 5 ? "bg-muted/20" : ""}`}>
+                          <span className={`grid size-7 place-items-center rounded-full text-[12px] ${isToday ? "bg-brand font-semibold text-brand-foreground shadow-md" : inMonth ? "font-medium text-card-foreground" : "text-muted-foreground/40"}`}>{Number(date.slice(8, 10))}</span>
+                          {hidden > 0 && <p className="absolute bottom-1.5 text-[10px] font-medium text-muted-foreground">+{hidden} more</p>}
+                        </div>
+                      );
+                    })}
+                    <div className="pointer-events-none absolute inset-x-0 top-10 grid grid-cols-7 gap-y-1 px-1">
+                      {shown.map(({ e, s, en, lane, cont, more }) => (
+                        <button key={e.id} type="button" title={e.name} onClick={() => { setSelectedId(e.id); setDraft(null); }}
+                          style={{ gridColumn: `${s + 1} / ${en + 2}`, gridRow: lane + 1 }}
+                          className={`pointer-events-auto mx-0.5 flex h-6 items-center gap-1.5 truncate px-2 text-left text-[11px] font-semibold transition-all hover:-translate-y-px hover:shadow-md ${TYPE_STYLE[e.type]} ${cont ? "rounded-l-sm" : "rounded-l-full"} ${more ? "rounded-r-sm" : "rounded-r-full"} ${selected?.id === e.id ? "shadow-md ring-2 ring-brand/60" : ""}`}>
+                          <i className={`size-1.5 shrink-0 rounded-full ${TYPE_DOT[e.type]}`} />
+                          <span className="truncate">{e.name}</span>
+                        </button>
                       ))}
-                      {dayEvents.length > 3 && <p className="text-[9.5px] text-muted-foreground">+{dayEvents.length - 3} more</p>}
                     </div>
                   </div>
                 );
