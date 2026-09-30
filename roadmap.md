@@ -216,8 +216,8 @@
 
 ## Publication coverage and AI workspace polish
 
-- [ ] Clarify year-round fallback and seasonal replacement periods in the publication selector
-- [ ] Show per-campaign property adoption as one plain-language sentence
+- [x] Clarify year-round fallback and seasonal replacement periods in the publication selector
+- [x] Show per-campaign property adoption as one plain-language sentence
 
 ## Full AI planning mode
 
