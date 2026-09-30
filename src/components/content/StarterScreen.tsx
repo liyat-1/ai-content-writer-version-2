@@ -19,8 +19,8 @@ export function StarterScreen({ onLocalize, onKeep }: { onLocalize: () => void; 
     <section aria-label="Plan with AI" className="ai-surface relative -mx-4 overflow-hidden px-4 pb-16 pt-12 text-center sm:-mx-6 sm:px-6">
       <div aria-hidden className="ai-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(70%_60%_at_50%_35%,black,transparent)]" />
       <div aria-hidden className="starter-orb pointer-events-none absolute -left-20 top-10 size-72 rounded-full bg-brand/25" />
-      <div aria-hidden className="starter-orb pointer-events-none absolute -right-16 top-40 size-80 rounded-full bg-event-holiday" style={{ animationDelay: "-6s" }} />
-      <div aria-hidden className="starter-orb pointer-events-none absolute bottom-0 left-1/3 size-64 rounded-full bg-event-seasonal" style={{ animationDelay: "-3s" }} />
+      <div aria-hidden className="starter-orb pointer-events-none absolute -right-16 top-40 size-80 rounded-full bg-warning-soft" style={{ animationDelay: "-6s" }} />
+      <div aria-hidden className="starter-orb pointer-events-none absolute bottom-0 left-1/3 size-64 rounded-full bg-brand-soft" style={{ animationDelay: "-3s" }} />
       <div className="relative mx-auto max-w-4xl">
         <p className="starter-rise inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand shadow-sm backdrop-blur-sm">
           <span className="relative flex size-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-60" /><span className="relative inline-flex size-2 rounded-full bg-brand" /></span>
@@ -51,10 +51,7 @@ export function StarterScreen({ onLocalize, onKeep }: { onLocalize: () => void; 
                   </div>
                   <h2 className="mt-3 text-[13px] font-semibold leading-snug text-card-foreground sm:text-[14px]">{event.name}</h2>
                   <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{event.note ?? event.location}</p>
-                  <div className="mt-2.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide">
-                    <span className="text-brand">{event.type} · {event.source === "Directful" ? "Directful" : event.source === "Hotel calendar" ? "Hotel" : "Manual"}</span>
-                    <span className="text-muted-foreground">{daysLabel(event.start)}</span>
-                  </div>
+                  <p className="mt-2.5 text-[10px] font-semibold uppercase tracking-wide text-brand">{daysLabel(event.start)}</p>
                 </article>
                 </div>
               </div>

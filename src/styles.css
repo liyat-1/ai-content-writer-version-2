@@ -121,8 +121,8 @@
   --warning-soft: oklch(0.96 0.045 78);
   --event-local: oklch(0.94 0.038 255);
   --event-local-foreground: oklch(0.47 0.2 258);
-  --event-holiday: oklch(0.95 0.042 15);
-  --event-holiday-foreground: oklch(0.52 0.19 18);
+  --event-holiday: var(--warning-soft);
+  --event-holiday-foreground: var(--warning);
   --event-seasonal: oklch(0.94 0.068 150);
   --event-seasonal-foreground: oklch(0.46 0.125 152);
 }
@@ -168,8 +168,8 @@
   --warning-soft: oklch(0.28 0.055 65);
   --event-local: oklch(0.3 0.06 255);
   --event-local-foreground: oklch(0.84 0.09 250);
-  --event-holiday: oklch(0.3 0.06 18);
-  --event-holiday-foreground: oklch(0.84 0.09 20);
+  --event-holiday: var(--warning-soft);
+  --event-holiday-foreground: var(--warning);
   --event-seasonal: oklch(0.3 0.055 152);
   --event-seasonal-foreground: oklch(0.84 0.09 152);
 }
