@@ -255,3 +255,10 @@
 - [x] Upload modal with drag-and-drop and local-file selection from both entry points, landing on Events & Holidays
 - [x] Campaign Results cards with property usage, prior comparison, AI insight, and Use previous version when better
 - [x] Verify the refreshed flows at desktop and narrow widths — no console errors
+
+## Events and Results polish with performance-led review
+
+- [x] Refine Events & Holidays calendar presentation and Results hierarchy
+- [x] Replace the misleading previous-version toast with sample historical copy review and comparison
+- [x] Let AI propose a current, relevant rewrite inspired by the stronger past copy; save only after review
+- [x] Verify both pages and the review flow at desktop and narrow widths

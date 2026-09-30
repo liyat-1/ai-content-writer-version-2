@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { CalendarRange, Check, ChevronDown, Layers, Mail, MessageSquare, Sparkles, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { CalendarRange, Check, ChevronDown, GitCompareArrows, Layers, Mail, MessageSquare, Sparkles, TrendingDown, TrendingUp, Users } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Button } from "@/components/ui/button";
 import { useMarketing } from "@/lib/marketing";
-import { toast } from "sonner";
+import { PastVersionReview } from "./PastVersionReview";
+import { PAST_CAMPAIGN_COPY } from "@/lib/pastCampaignCopy";
 import { useCalendar, fmtRange, isCurrent, type ContentPeriod } from "@/lib/calendar";
 import { EVENT_IMAGES } from "@/components/content/eventImages";
 import { ACTIVE_RELEASE_ID, RELEASES, TOTAL_PROPERTIES, campaignProperties, useSelectedRelease, type Release } from "@/lib/releases";
@@ -109,32 +109,35 @@ function Categories({ periods, selected, onSelect, compare, date }: { periods: C
 
 function CategoryDetail({ release, periods, period, compare, date }: { release: Release; periods: ContentPeriod[]; period: ContentPeriod; compare: Compare; date: string }) {
   const { campaigns } = useMarketing();
+  const [reviewId, setReviewId] = useState<string | null>(null);
   const pending = isPending(period);
   const base = baseline(periods, period, compare, date);
   const cur = periodStat(period);
   return (
     <section className="space-y-3">
-      <div className={`${panel} p-5`}>
+      <div className="border-b border-border pb-4">
         <p className="text-[10.5px] font-semibold uppercase text-muted-foreground">{period.kind} · {fmtRange(period.start, period.end)}</p>
         <h3 className="mt-1 text-[18px] font-semibold text-card-foreground">{period.name}</h3>
         {pending ? <p className="mt-2 text-[12px] text-muted-foreground">This category starts {fmtRange(period.start, period.start)} — results will be tracked from that day.</p>
           : <div className="mt-3 flex gap-3 rounded-md bg-brand-soft/40 p-3"><Sparkles size={15} className="mt-0.5 shrink-0 text-brand" /><p className="text-[12px] leading-5 text-card-foreground"><strong>AI insight:</strong> {periodInsight(period, base, cur)} <span className="text-muted-foreground">(vs {base.label})</span></p></div>}
       </div>
-      {!pending && <div className="grid gap-3 lg:grid-cols-2">
+      {!pending && <div className="grid gap-4 lg:grid-cols-2">
         {CAMPAIGN_IDS.map((id) => {
           const c = campaigns.find((x) => x.id === id); const name = c?.name ?? id;
           const s = periodStat(period, id); const b = baseline(periods, period, compare, date, id); const d = s.click - b.stat.click;
           const used = campaignProperties(release.id, id);
-          return <article key={id} className={`${panel} p-4`}>
-            <div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-md bg-muted text-brand">{c?.strategy === "text" ? <MessageSquare size={14} /> : <Mail size={14} />}</span><div className="min-w-0"><p className="truncate text-[12.5px] font-semibold text-card-foreground">{name}</p><p className="text-[10.5px] text-muted-foreground">{c?.timing ?? "Scheduled"}</p></div></div><Delta d={d} /></div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] text-muted-foreground">{([["Click rate", s.click, b.stat.click], ["Click-to-book", s.book, b.stat.book], ["Spam rate", s.spam, b.stat.spam]] as const).map(([l, v, p]) => <div key={l}><p>{l}</p><p className="mt-0.5 text-[15px] font-semibold text-card-foreground">{v}%</p><p>was {p}%</p></div>)}</div>
-            <div className="mt-3 flex items-center gap-2 border-t border-border pt-3"><Users size={13} className="shrink-0 text-muted-foreground" /><p className="text-[11.5px] text-card-foreground">{adoptionSentence(release.id, name, id)}</p></div>
+          return <article key={id} className={`${panel} overflow-hidden`}>
+            <div className={`h-1 ${d < 0 ? "bg-warning" : "bg-brand"}`} />
+            <div className="p-5"><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-soft text-brand">{c?.strategy === "text" ? <MessageSquare size={14} /> : <Mail size={14} />}</span><div className="min-w-0"><p className="truncate text-[14px] font-semibold text-card-foreground">{name}</p><p className="text-[11px] text-muted-foreground">{c?.timing ?? "Scheduled"}</p></div></div><Delta d={d} /></div>
+            <div className="mt-5 grid grid-cols-3 divide-x divide-border border-y border-border py-3 text-[10px] text-muted-foreground">{([["Click rate", s.click, b.stat.click], ["Click-to-book", s.book, b.stat.book], ["Spam rate", s.spam, b.stat.spam]] as const).map(([l, v, p]) => <div key={l} className="px-3 first:pl-0"><p>{l}</p><p className="mt-1 text-[20px] font-semibold text-card-foreground">{v}%</p><p>previous {p}%</p></div>)}</div>
+            <div className="mt-4 flex items-center gap-2"><Users size={13} className="shrink-0 text-muted-foreground" /><p className="text-[11.5px] text-card-foreground">{adoptionSentence(release.id, name, id)}</p></div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-brand" style={{ width: `${(used / TOTAL_PROPERTIES) * 100}%` }} /></div>
-            <div className="mt-3 flex gap-2 rounded-md bg-muted/50 p-3"><Sparkles size={13} className="mt-0.5 shrink-0 text-brand" /><p className="text-[11.5px] leading-5 text-card-foreground">{periodInsight(period, b, s)}</p></div>
-            {d < 0 && <div className="mt-3 border-t border-border pt-3"><p className="text-[11.5px] text-muted-foreground">The previous content reached <strong className="text-card-foreground">{b.stat.click}%</strong> — better than this one.</p><div className="mt-2 flex flex-wrap gap-2"><Button size="sm" variant="brand" onClick={() => toast.success(`${name}: previous content restored as a new version and sent to Review.`)}>Use previous version</Button><Button size="sm" variant="outline" onClick={() => toast.success("Current content kept.")}>Keep current</Button><Button size="sm" variant="ghost" asChild><Link to="/content"><Sparkles size={13} />Edit with AI</Link></Button></div></div>}
-          </article>;
+            <div className={`mt-4 flex gap-2 border-l-2 p-3 ${d < 0 ? "border-warning bg-warning-soft/40" : "border-brand bg-brand-soft/35"}`}><Sparkles size={14} className={`mt-0.5 shrink-0 ${d < 0 ? "text-warning" : "text-brand"}`} /><div><p className="text-[10px] font-semibold uppercase text-muted-foreground">Content insight</p><p className="mt-1 text-[11.5px] leading-5 text-card-foreground">{d < 0 && PAST_CAMPAIGN_COPY[id] ? `A previous ${name} version performed better. ${PAST_CAMPAIGN_COPY[id].learned}` : periodInsight(period, b, s)}</p></div></div>
+            {d < 0 && compare === "previous" && PAST_CAMPAIGN_COPY[id] && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><p className="max-w-[260px] text-[11px] leading-4 text-muted-foreground">Review the current and past copy before using what worked.</p><Button size="sm" variant="brand" onClick={() => setReviewId(id)}><GitCompareArrows size={14} />Review & use this version</Button></div>}
+          </div></article>;
         })}
       </div>}
+      {reviewId && <PastVersionReview key={`${reviewId}-${period.id}`} campaignId={reviewId} period={period} currentRate={periodStat(period, reviewId).click} previousRate={baseline(periods, period, compare, date, reviewId).stat.click} onClose={() => setReviewId(null)} />}
     </section>
   );
 }
@@ -152,7 +155,7 @@ function ResultsWorkspace() {
   return (
     <MarketingShell title="Results">
       <main className="mx-auto max-w-[1180px] space-y-5 px-4 pb-16 pt-6 sm:px-6">
-        <header><p className="text-[10.5px] font-semibold uppercase text-brand">Content / Results</p><h1 className="mt-2 font-display text-[30px] font-semibold text-card-foreground sm:text-[36px]">Releases & results</h1><p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">Your published content, the categories inside it, and how each one performs — all on one page.{releaseCoversToday(release) ? "" : " "}</p></header>
+         <header className="border-b border-border pb-5"><p className="text-[10.5px] font-semibold uppercase text-brand">Content / Results</p><h1 className="mt-2 font-display text-[30px] font-semibold text-card-foreground sm:text-[36px]">Content results</h1><p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">Explore how each publication and campaign performed, and carry forward what worked.</p></header>
         <PublicationPicker release={release} onSelect={select} />
         <CompareTabs value={compare} onChange={setCompare} date={date} onDate={setDate} />
         <Overview release={release} periods={periods} compare={compare} date={date} />

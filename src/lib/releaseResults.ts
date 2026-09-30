@@ -30,7 +30,7 @@ export function periodStat(p: ContentPeriod, campaignId?: string): Stat {
   const base = campaignId ? CAMPAIGN_BASE[campaignId] ?? 7 : 7.4;
   const lift = p.kind === "Event-based" ? 1.1 : p.kind === "Seasonal" ? 0.7 : -0.4;
   const noise = hash(p.id + (campaignId ?? "")) * 0.6 - 0.3;
-  const dip = campaignId === "post-checkout" && p.kind !== "Standard" ? -1.3 : 0; // demo: prior version better
+  const dip = campaignId === "post-checkout" && p.kind !== "Standard" ? -2.6 : 0; // demo: prior version better even in an event-led period
   const click = +(base + lift + noise + dip).toFixed(1);
   return { click, book: +(click * 0.36).toFixed(1), spam: +(0.12 - lift * 0.03).toFixed(2) };
 }
