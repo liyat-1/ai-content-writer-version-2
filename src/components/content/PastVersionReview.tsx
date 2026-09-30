@@ -45,7 +45,7 @@ export function PastVersionReview({ campaignId, period, currentRate, previousRat
 
   const save = () => {
     if (!proposal) return;
-    saveCampaign({ ...campaign, content: { direct: { ...campaign.content.direct, ...proposal.direct }, ota: { ...campaign.content.ota, ...proposal.ota } } }, `Draft inspired by ${past.label}`);
+    saveCampaign({ ...campaign, status: "Needs review", content: { direct: { ...campaign.content.direct, ...proposal.direct, reviewed: { ...campaign.content.direct.reviewed, [channel]: false } }, ota: { ...campaign.content.ota, ...proposal.ota, reviewed: { ...campaign.content.ota.reviewed, [channel]: false } } } }, `Draft inspired by ${past.label}`);
     onClose();
   };
 
