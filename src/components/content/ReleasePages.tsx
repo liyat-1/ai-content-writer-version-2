@@ -137,7 +137,7 @@ function CategoryDetail({ release, periods, period, compare, date }: { release: 
           </div></article>;
         })}
       </div>}
-      {reviewId && <PastVersionReview key={`${reviewId}-${period.id}`} campaignId={reviewId} period={period} onClose={() => setReviewId(null)} />}
+      {reviewId && <PastVersionReview key={`${reviewId}-${period.id}`} campaignId={reviewId} period={period} currentRate={periodStat(period, reviewId).click} previousRate={baseline(periods, period, compare, date, reviewId).stat.click} onClose={() => setReviewId(null)} />}
     </section>
   );
 }

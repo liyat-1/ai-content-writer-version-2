@@ -8,7 +8,7 @@ import { PAST_CAMPAIGN_COPY } from "@/lib/pastCampaignCopy";
 import { Diff } from "@/components/ai/AiEditPanel";
 import type { ContentPeriod } from "@/lib/calendar";
 
-export function PastVersionReview({ campaignId, period, onClose }: { campaignId: string; period: ContentPeriod; onClose: () => void }) {
+export function PastVersionReview({ campaignId, period, currentRate, previousRate, onClose }: { campaignId: string; period: ContentPeriod; currentRate: number; previousRate: number; onClose: () => void }) {
   const { campaigns } = useLibrary();
   const libraryId = Object.keys(EDITOR_ID).find((key) => EDITOR_ID[key] === campaignId);
   const campaign = campaigns.find((item) => item.id === libraryId);
@@ -59,7 +59,7 @@ export function PastVersionReview({ campaignId, period, onClose }: { campaignId:
       <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-3 sm:px-7">
         <div className="flex rounded-md bg-muted p-1">{(["direct", "ota"] as const).map((value) => <Button key={value} size="sm" variant={segment === value ? "brand" : "ghost"} onClick={() => { setSegment(value); setProposal(null); }}>{value === "direct" ? "Direct" : "OTA"}</Button>)}</div>
         <div className="flex rounded-md bg-muted p-1">{campaign.channels.map((value) => <Button key={value} size="sm" variant={channel === value ? "brand" : "ghost"} onClick={() => { setChannel(value); setProposal(null); }}>{value === "email" ? "Email" : "Text"}</Button>)}</div>
-        <span className="ml-auto text-[11px] text-muted-foreground">Past {channel} click rate 6.9% · current 6.4% (sample)</span>
+        <span className="ml-auto text-[11px] text-muted-foreground">Prior campaign click rate {previousRate}% · current {currentRate}% (sample)</span>
       </div>
       <div className="min-h-0 overflow-y-auto px-5 py-5 sm:px-7">
         <div className="mb-5 border-l-2 border-brand bg-brand-soft/35 px-4 py-3"><p className="flex items-center gap-2 text-[12px] font-semibold text-brand"><Sparkles size={15} />What the past version did differently</p><p className="mt-1 text-[12px] leading-5 text-card-foreground">{past.learned} This is a useful pattern, not proof the wording alone caused the difference.</p></div>
