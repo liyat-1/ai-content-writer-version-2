@@ -155,7 +155,7 @@ function ResultsWorkspace() {
   return (
     <MarketingShell title="Results">
       <main className="mx-auto max-w-[1180px] space-y-5 px-4 pb-16 pt-6 sm:px-6">
-         <header className="border-b border-border pb-5"><p className="text-[10.5px] font-semibold uppercase text-brand">Content / Results</p><h1 className="mt-2 font-display text-[30px] font-semibold text-card-foreground sm:text-[36px]">Content results</h1><p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">Explore how each publication and campaign performed, and carry forward what worked.{releaseCoversToday(release) ? "" : " "}</p></header>
+         <header className="border-b border-border pb-5"><p className="text-[10.5px] font-semibold uppercase text-brand">Content / Results</p><h1 className="mt-2 font-display text-[30px] font-semibold text-card-foreground sm:text-[36px]">Content results</h1><p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">Explore how each publication and campaign performed, and carry forward what worked.</p></header>
         <PublicationPicker release={release} onSelect={select} />
         <CompareTabs value={compare} onChange={setCompare} date={date} onDate={setDate} />
         <Overview release={release} periods={periods} compare={compare} date={date} />
