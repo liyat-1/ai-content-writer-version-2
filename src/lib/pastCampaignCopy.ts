@@ -1,9 +1,9 @@
 import type { Segment, SegmentContent } from "@/lib/contentLibrary";
 
-/** A known, stronger historical copy sample for the demo's post-checkout campaign. */
+/** Sample historical copy for the demo's stronger post-checkout campaign. */
 export const PAST_CAMPAIGN_COPY: Record<string, { label: string; learned: string; content: Record<Segment, Pick<SegmentContent, "email" | "text">> }> = {
   "post-checkout": {
-    label: "Previous post-checkout · v2",
+    label: "Previous post-checkout · v2 (sample)",
     learned: "The shorter thank-you led with a warm, specific memory and gave guests one clear next step. The current message asks for feedback before offering a reason to return.",
     content: {
       direct: {

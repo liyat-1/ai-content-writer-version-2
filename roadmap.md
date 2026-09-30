@@ -258,7 +258,7 @@
 
 ## Events and Results polish with performance-led review
 
-- [ ] Refine Events & Holidays calendar presentation and Results hierarchy
-- [ ] Replace the misleading previous-version toast with actual historical copy review and comparison
-- [ ] Let AI propose a current, relevant rewrite inspired by the stronger past copy; save only after review
-- [ ] Verify both pages and the review flow at desktop and narrow widths
+- [x] Refine Events & Holidays calendar presentation and Results hierarchy
+- [x] Replace the misleading previous-version toast with sample historical copy review and comparison
+- [x] Let AI propose a current, relevant rewrite inspired by the stronger past copy; save only after review
+- [x] Verify both pages and the review flow at desktop and narrow widths
