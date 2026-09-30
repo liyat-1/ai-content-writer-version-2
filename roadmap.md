@@ -1,3 +1,9 @@
+## Events page restyle (calendar reference)
+
+- [x] Add pastel event-chip tokens (light + dark) for Holiday / Local event / Seasonal
+- [ ] Rebuild Events & Holidays: left rail (mini calendar, category legend, calendars), Today header, filled today circle, pastel chips
+- [ ] Verify desktop and narrow widths, no console errors
+
 # Roadmap
 
 - [x] Channel strategy: manage mode, selectable cards, floating panel, Apply/Done
