@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3, Mail, MessageSquare, Pencil, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,9 @@ export function generateCopy(month: number, tone: string, direction: string, sea
   if (tone === "concise") body = body.split("—")[0].trim() + ". Book now for our best rate.";
   if (tone === "warmer") body = "We'd love to welcome you back. " + body;
   if (direction === "promotional") body = body.replace("Book direct for our best rate", "Our best rate of the season is live — book direct");
-  if (note) body = `${note.replace(/\.$/, "")}. ` + body;
+  // Preferences guide the rewrite; they are not guest-facing copy.
+  if (/short|concise/i.test(note)) body = body.split(".").slice(0, 2).join(".").trim() + ". Book direct for our best rate.";
+  if (/relax|rest|unwind/i.test(note)) body = body.replace("Your room", "A restful stay");
   return {
     email: {
       subject: base.subject,
@@ -48,6 +50,8 @@ export function V2Workspace() {
   const { campaigns } = useMarketing();
   const { campaigns: libraryCampaigns } = useLibrary();
   const [entered, setEntered] = useState(false);
+  useEffect(() => { if (window.sessionStorage.getItem("content-v2-entered") === "true") setEntered(true); }, []);
+  const revealContent = () => { window.sessionStorage.setItem("content-v2-entered", "true"); setEntered(true); };
   const [flow, setFlow] = useState<FlowSetup | null>(null);
   const [introOpen, setIntroOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -86,7 +90,7 @@ export function V2Workspace() {
             <p className="mt-5 text-[12px] text-muted-foreground">Current content: {current.label} · Next suggested update: {nextUp?.short ?? "—"}</p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
               <Button variant="brand" size="lg" onClick={() => openUpdate()}><Sparkles size={15} />Update with AI</Button>
-              <Button variant="outline" size="lg" onClick={() => setEntered(true)}>Keep current content</Button>
+               <Button variant="outline" size="lg" onClick={revealContent}>Keep current content</Button>
             </div>
             <Button variant="ghost" size="sm" className="mt-3" onClick={() => setIntroOpen(true)}>How it works</Button>
           </div>
@@ -125,7 +129,7 @@ export function V2Workspace() {
         <div className="mt-5 text-right"><Link to="/content/results-v2" className="text-[12px] font-semibold text-brand hover:underline">View content results →</Link></div>
       </>}
     </main>
-    {flow && <RefreshFlow key={`${flow.recommendedId}-${flow.context ?? ""}`} setup={flow} periodOptions={periodOptions} baseCopy={current.copy} aiCopy={({ month, tone, direction, seasonal, note }) => [generateCopy(month, tone, direction, seasonal?.name ?? null, note)]} learning={flow.context} onPublish={({ periodId, copy, preferences }) => { publishPeriod(periodId, copy, true, preferences); setSelectedId(periodId); setEntered(true); setFlow(null); }} onClose={() => setFlow(null)} />}
+     {flow && <RefreshFlow key={`${flow.recommendedId}-${flow.context ?? ""}`} setup={flow} periodOptions={periodOptions} baseCopy={current.copy} aiCopy={({ month, tone, direction, seasonal, note }) => [generateCopy(month, tone, direction, seasonal?.name ?? null, note)]} learning={flow.context} onPublish={({ periodId, copy, preferences }) => { publishPeriod(periodId, copy, true, preferences); setSelectedId(periodId); revealContent(); setFlow(null); }} onClose={() => setFlow(null)} />}
     <Dialog open={introOpen} onOpenChange={setIntroOpen}><DialogContent className="max-w-md"><DialogHeader><DialogTitle>How AI refresh works</DialogTitle></DialogHeader><p className="text-[13px] leading-relaxed text-muted-foreground">Choose a period and how you want it written. Review the plan and the new messages before publishing. Your current version stays available in the schedule.</p><div className="flex justify-end"><Button variant="brand" onClick={() => { setIntroOpen(false); openUpdate(); }}>Update with AI</Button></div></DialogContent></Dialog>
     <Dialog open={!!contentOpen} onOpenChange={(open) => !open && setContentOpen(null)}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>{contentOpen?.name} · {selected.label}</DialogTitle></DialogHeader><div className="max-h-[65vh] space-y-3 overflow-y-auto">{contentOpen?.email && <EmailMock email={contentOpen.email} image="lobby" />}<div className="rounded-md bg-muted/40 p-3"><p className="text-[10px] font-semibold uppercase text-muted-foreground">Text message</p><p className="mt-1 text-[12px] text-card-foreground">{fill(contentOpen?.text ?? "")}</p></div></div></DialogContent></Dialog>
     <Dialog open={propsOpen} onOpenChange={setPropsOpen}><DialogContent className="max-w-md"><DialogHeader><DialogTitle>Properties · {selected.label}</DialogTitle></DialogHeader><p className="text-[12px] text-muted-foreground">{selected.status === "Previous" ? `${selected.previouslyUsedBy ?? 0} properties previously used this content.` : `${selected.properties} of ${TOTAL_PROPERTIES} properties use this content. Others keep their own version.`}</p><ul className="max-h-[50vh] space-y-1.5 overflow-y-auto">{USAGE_ROWS.map((row) => <li key={row.property} className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-[12px]"><span className="min-w-0 truncate text-card-foreground">{row.property}</span><span className="shrink-0 text-muted-foreground">{row.using === "suggested" ? "Shared" : "Custom"}</span></li>)}</ul></DialogContent></Dialog>
