@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, CalendarRange, Check, Circle, Infinity as InfinityIcon, PartyPopper, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarRange, Check, Circle, Infinity as InfinityIcon, PartyPopper, Plus, Sparkle, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sparkle as SparkIcon } from "@/components/ai/Sparkle";
@@ -50,7 +50,7 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
   const recommended = periodOptions.find((p) => p.id === setup.recommendedId) ?? periodOptions[0];
   const first = periodOptions.find((p) => p.id === selected[0]) ?? recommended;
   const suggestion = useMemo(() => (selected.length ? seasonalFor(first.month) : null), [first, selected.length]);
-  const suggestionLive = seasonalUsed !== null ? seasonalUsed : (!seasonalRemoved && suggestion);
+  const suggestionLive: SeasonalSuggestion | null = seasonalUsed !== null ? seasonalUsed : (!seasonalRemoved ? suggestion : null);
 
   // Keep the seasonal suggestion in sync when the period changes and the hotel hasn't decided yet.
   useEffect(() => { setSeasonalUsed(null); setSeasonalRemoved(false); }, [selected[0]]);
