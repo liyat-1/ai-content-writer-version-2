@@ -122,7 +122,7 @@ export function V2Workspace() {
             {selected.status === "Previous" && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5"><p className="text-[12px] text-muted-foreground">This version is kept in your content history.</p><Button variant="outline" onClick={() => setConfirmUse(selected)}>Review & use this version</Button></div>}
           </div>
         </section>
-        <div className="mt-5 text-right"><Link to="/content/v2/results" className="text-[12px] font-semibold text-brand hover:underline">View content results →</Link></div>
+        <div className="mt-5 text-right"><Link to="/content/results-v2" className="text-[12px] font-semibold text-brand hover:underline">View content results →</Link></div>
       </>}
     </main>
     {flow && <RefreshFlow key={`${flow.recommendedId}-${flow.context ?? ""}`} setup={flow} periodOptions={periodOptions} baseCopy={current.copy} aiCopy={({ month, tone, direction, seasonal, note }) => [generateCopy(month, tone, direction, seasonal?.name ?? null, note)]} learning={flow.context} onPublish={({ periodId, copy, preferences }) => { publishPeriod(periodId, copy, true, preferences); setSelectedId(periodId); setEntered(true); setFlow(null); }} onClose={() => setFlow(null)} />}
