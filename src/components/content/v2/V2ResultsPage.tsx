@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { publishPeriod, useV2 } from "@/lib/contentV2";
 import { RefreshFlow, type FlowSetup } from "./RefreshFlow";
-import { generateCopy } from "./V2Workspace";
+import { generateCopy } from "./generateCopy";
 import { V2Results } from "./V2Results";
 
 export function V2ResultsPage() {
