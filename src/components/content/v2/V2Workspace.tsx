@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { CampaignEditor } from "@/components/marketing/CampaignEditor";
 import { TestCampaignDialog } from "@/components/marketing/MarketingDialogs";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { EmailMock, fill } from "@/components/content/shared";
+import { AiMark, EmailMock, fill } from "@/components/content/shared";
 import { EDITOR_ID, MONTH_PACKAGES, packageSnippet, useLibrary } from "@/lib/contentLibrary";
 import { useMarketing } from "@/lib/marketing";
 import { RefreshFlow, type FlowSetup } from "./RefreshFlow";
@@ -35,7 +35,7 @@ export function V2Workspace() {
   const periods = v2.periods;
   const current = periods.find((p) => p.status === "Current") ?? periods[2];
   const nextUp = periods.find((p) => p.status === "Upcoming");
-  const shownPeriods = periods.filter((p) => p.status !== "Upcoming" || v2.nextReady === p.id);
+  const shownPeriods = periods;
   const selected = shownPeriods.find((p) => p.id === selectedId) ?? current;
   const selectedIndex = shownPeriods.findIndex((p) => p.id === selected.id);
   const recommended = nextUp ?? current;
@@ -54,11 +54,10 @@ export function V2Workspace() {
         <section className="ai-surface relative flex min-h-[calc(100dvh-170px)] items-center justify-center overflow-hidden rounded-lg border border-border px-5 py-12 text-center sm:px-8" aria-label="Refresh your content with AI">
           <div aria-hidden className="ai-grid pointer-events-none absolute inset-0 opacity-50" />
           <div className="relative max-w-2xl">
-            <span className="mx-auto grid size-12 place-items-center rounded-md bg-brand text-brand-foreground shadow-card"><Sparkles size={23} /></span>
-            <p className="mt-6 text-[11px] font-semibold uppercase text-brand">{HOTEL}</p>
-            <h1 className="mt-3 font-display text-[32px] font-semibold leading-tight text-card-foreground sm:text-[42px]">Refresh your content with AI</h1>
-            <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">Refresh your automated invites for the period ahead using your current content and the moments that matter. Nothing publishes until you review it.</p>
-            <p className="mt-5 text-[12px] text-muted-foreground">Current content: {current.label} · Next suggested update: {nextUp?.short ?? "—"}</p>
+             <span className="inline-block ai-float"><AiMark size={52} live /></span>
+             <p className="mt-6 text-[11px] font-semibold uppercase text-brand">New in Content Library · {HOTEL}</p>
+             <h1 className="mt-3 font-display text-[32px] font-semibold leading-tight text-card-foreground sm:text-[42px]">Write your content with AI</h1>
+             <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">A new way to refresh your automated invites. Choose when to update, get recommendations, and shape the message in your own voice. Review everything before you publish.</p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
               <Button variant="brand" size="lg" onClick={() => openUpdate()}><Sparkles size={15} />Update with AI</Button>
                <Button variant="outline" size="lg" onClick={revealContent}>Keep current content</Button>
@@ -69,25 +68,25 @@ export function V2Workspace() {
       ) : <>
         <header className="flex flex-wrap items-end justify-between gap-4 pb-6">
           <div><p className="text-[11px] font-semibold uppercase text-brand">Content Library / V2</p><h1 className="mt-2 font-display text-[30px] font-semibold text-card-foreground sm:text-[36px]">Your content</h1><p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">One shared set of guest messages, used throughout the year.</p></div>
-          <Button variant="brand" onClick={() => openUpdate(selected.status === "Current" ? selected : recommended)}><Sparkles size={15} />Update with AI</Button>
+           <Button variant="brand" onClick={() => openUpdate(selected.status === "Upcoming" || selected.status === "Current" ? selected : recommended)}><Sparkles size={15} />Update with AI</Button>
         </header>
-        {nextUp && !v2.pusherDismissed && <section className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/35 px-4 py-3 sm:px-5">
+         {selected.status === "Upcoming" && !v2.pusherDismissed && <section className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/35 px-4 py-3 sm:px-5">
           <span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-soft text-brand"><CalendarDays size={17} /></span>
-          <div className="min-w-0 flex-1"><p className="text-[13px] font-semibold text-card-foreground">Prepare your {nextUp.short} content</p><p className="text-[11.5px] text-muted-foreground">Your current content stays live until you review and publish an update.</p></div>
-          <Button size="sm" variant="brand" onClick={() => openUpdate(nextUp)}><Sparkles size={13} />Update</Button><Button size="sm" variant="ghost" onClick={dismissPusher}>Not now</Button>
+           <div className="min-w-0 flex-1"><p className="text-[13px] font-semibold text-card-foreground">Refresh your {selected.short} content</p><p className="text-[11.5px] text-muted-foreground">The year-round content below is set to run unless you publish a fresh update. Your current content stays live until then.</p></div>
+           <Button size="sm" variant="brand" onClick={() => openUpdate(selected)}><Sparkles size={13} />Refresh {selected.short}</Button><Button size="sm" variant="ghost" onClick={dismissPusher}>Not now</Button>
         </section>}
         <section className="overflow-hidden rounded-lg border border-border bg-card shadow-card" aria-label="Monthly published content">
           <div className="ai-surface grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-5 sm:px-6">
             <Button variant="outline" size="icon" aria-label="Previous month" disabled={selectedIndex <= 0} onClick={() => setSelectedId(shownPeriods[selectedIndex - 1]?.id ?? null)}><ChevronLeft size={17} /></Button>
-            <div className="min-w-0 text-center"><p className="flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase text-brand"><CalendarDays size={13} />Content schedule</p><h2 className="mt-1 text-[22px] font-semibold text-card-foreground">{selected.label}</h2><div className="mt-2 flex flex-wrap items-center justify-center gap-2"><span className={`rounded-sm px-2 py-1 text-[10px] font-semibold ${selected.status === "Current" ? "bg-brand text-brand-foreground" : "bg-muted text-muted-foreground"}`}>{selected.status === "Current" ? "Live now" : selected.status === "Upcoming" ? "Scheduled" : "Previously published"}</span><span className="text-[11px] text-muted-foreground">{selected.status === "Upcoming" ? "Year-round foundation" : selected.originLabel}</span></div><Button size="sm" variant="ghost" className="mt-1 h-7" onClick={() => setPropsOpen(true)}><Users size={13} />{selected.status === "Previous" ? `${selected.previouslyUsedBy ?? 0} previously` : `${selected.properties} / ${TOTAL_PROPERTIES} properties using`}</Button></div>
+             <div className="min-w-0 text-center"><p className="flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase text-brand"><CalendarDays size={13} />Content schedule</p><h2 className="mt-1 text-[22px] font-semibold text-card-foreground">{selected.label}</h2><div className="mt-2 flex flex-wrap items-center justify-center gap-2"><span className={`rounded-sm px-2 py-1 text-[10px] font-semibold ${selected.status === "Current" ? "bg-brand text-brand-foreground" : "bg-muted text-muted-foreground"}`}>{selected.status === "Current" ? "Live now" : selected.status === "Upcoming" ? "Upcoming" : "Previously published"}</span><span className="text-[11px] text-muted-foreground">{selected.status === "Upcoming" ? "Year-round content will run" : selected.originLabel}</span></div><Button size="sm" variant="ghost" className="mt-1 h-7" onClick={() => setPropsOpen(true)}><Users size={13} />{selected.status === "Previous" ? `${selected.previouslyUsedBy ?? 0} previously` : `${selected.properties} / ${TOTAL_PROPERTIES} properties using`}</Button></div>
             <Button variant="outline" size="icon" aria-label="Next month" disabled={selectedIndex >= shownPeriods.length - 1} onClick={() => setSelectedId(shownPeriods[selectedIndex + 1]?.id ?? null)}><ChevronRight size={17} /></Button>
           </div>
           <div className="space-y-7 p-4 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"><div><h3 className="text-[15px] font-semibold text-card-foreground">Automated Invites <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{invites.length}</span></h3></div>{selected.aiAssisted && selected.preferences && <Button size="sm" variant="outline" onClick={() => openUpdate(selected)}><Pencil size={13} />Edit AI update</Button>}</div>
+             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"><h3 className="text-[15px] font-semibold text-card-foreground">Automated Invites <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{invites.length}</span></h3></div>
             {selected.aiAssisted && selected.preferences && <div className="flex flex-wrap items-start gap-3 border-l-2 border-brand bg-brand-soft/30 px-4 py-3 text-[12px]"><Sparkles size={15} className="mt-0.5 shrink-0 text-brand" /><div><p className="font-semibold text-card-foreground">How this version was written</p><p className="mt-0.5 text-muted-foreground">Tone: {selected.preferences.tone} · Direction: {selected.preferences.direction}{selected.preferences.note ? ` · “${selected.preferences.note}”` : ""}{selected.preferences.context ? ` · Inspired by: ${selected.preferences.context}` : ""}</p></div></div>}
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{invites.map((campaign) => {
               const libraryCampaign = libraryCampaigns.find((item) => EDITOR_ID[item.id] === campaign.id);
-              const text = campaign.id === "after-last-visit" ? selected.copy.text : libraryCampaign && pack ? packageSnippet(libraryCampaign, pack, "direct") : campaign.variants.direct.text.message;
+               const text = campaign.id === "after-last-visit" ? selected.copy.text : selected.status !== "Upcoming" && libraryCampaign && pack ? packageSnippet(libraryCampaign, pack, "direct") : campaign.variants.direct.text.message;
               const email = campaign.id === "after-last-visit" ? selected.copy.email : libraryCampaign?.content.direct.email;
               return <article key={campaign.id} className="flex min-h-[240px] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-card transition-colors hover:border-brand/30">
                 <div className="flex-1 p-4"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-soft text-brand">{campaign.strategy === "text" ? <MessageSquare size={15} /> : <Mail size={15} />}</span><div className="min-w-0"><h4 className="text-[14px] font-semibold text-card-foreground">{campaign.name}</h4><p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground"><Clock3 size={12} />{campaign.timing}</p></div></div><div className="mt-4 rounded-md bg-canvas p-3"><p className="text-[10px] font-semibold uppercase text-muted-foreground">Text preview</p><p className="mt-1 line-clamp-3 text-[12px] leading-relaxed text-card-foreground">“{fill(text)}”</p></div></div>

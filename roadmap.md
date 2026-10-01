@@ -284,3 +284,9 @@
 - [x] Move V2 Results to a separate page and keep metrics there, with review and AI improvement actions
 - [x] Retain AI update preferences so subsequent updates reopen with the original choices
 - [x] Verify content, Results, and update paths in the preview
+
+## V2 flow and results refinement
+- [ ] Present the V2 AI flow in the familiar V1 assistant style with recommendations independent of calendar data
+- [ ] Make the first screen month-neutral and clarify the upcoming year-round fallback, with refresh from that month
+- [ ] Remove the duplicate Edit AI update control and show all 11 invite campaigns in Results
+- [ ] Verify the updated notice, month navigation, AI flow, and Results

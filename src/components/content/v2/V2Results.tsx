@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AiMark, EmailMock } from "@/components/content/shared";
 import { AUGUST_ALV, RESULTS_MONTHS, useV2 } from "@/lib/contentV2";
+import { useMarketing } from "@/lib/marketing";
 
 type CampaignResult = {
   id: string; name: string; properties: number; click: number; clickDelta: number; ctb: number; ctbDelta: number;
@@ -27,12 +28,24 @@ const CAMPAIGN_RESULTS: Record<string, CampaignResult[]> = {
 
 export function V2Results({ onImprove }: { onImprove: (learning: string) => void }) {
   const { periods } = useV2();
+  const { campaigns: allCampaigns } = useMarketing();
   const [mi, setMi] = useState(RESULTS_MONTHS.length - 1);
   const [tab, setTab] = useState<"overview" | "campaigns">("overview");
   const [reviewOpen, setReviewOpen] = useState(false);
 
   const m = RESULTS_MONTHS[mi];
-  const campaigns = CAMPAIGN_RESULTS[m.id] ?? [];
+  const recorded = CAMPAIGN_RESULTS[m.id] ?? [];
+  const invites = allCampaigns.filter((campaign) => campaign.group === "invites");
+  const campaigns = invites.map((campaign, index) => {
+    const existing = recorded.find((result) => result.id === (campaign.id === "after-last-visit" ? "alv" : campaign.id === "before-arrival" ? "welcome" : campaign.id));
+    if (existing) return { ...existing, id: campaign.id, name: campaign.name };
+    const monthShift = mi - 1;
+    const click = +(2.8 + index * 0.19 + monthShift * 0.12).toFixed(1);
+    const ctb = +(0.9 + index * 0.07 + monthShift * 0.05).toFixed(1);
+    const clickDelta = +((index % 3 - 1) * 0.2 + monthShift * 0.1).toFixed(1);
+    const ctbDelta = +((index % 3 - 1) * 0.1).toFixed(1);
+    return { id: campaign.id, name: campaign.name, properties: 4, click, ctb, clickDelta, ctbDelta, aiInsight: clickDelta >= 0 ? "Engagement is holding steady. Keep the clear invitation and check the next period before changing it." : "A small dip from the prior period. Review the timing and make the return invitation more specific before the next update.", prior: { label: mi === 0 ? "July 2026" : RESULTS_MONTHS[mi - 1].label, click: +(click - clickDelta).toFixed(1), ctb: +(ctb - ctbDelta).toFixed(1) }, priorBetter: false };
+  });
   const alv = campaigns.find((c) => c.priorBetter);
   const improvementLearning = alv?.prior
     ? `August's After Last Visit version outperformed the current one (${alv.prior.click}% vs ${alv.click}% clicks). Its short invitation and direct-booking CTA worked well. Write a fresh version for the next period in that direction.`
@@ -97,7 +110,7 @@ export function V2Results({ onImprove }: { onImprove: (learning: string) => void
         </div>
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
-          {campaigns.map((c) => (
+           {campaigns.map((c) => (
             <article key={c.id} className="flex flex-col rounded-lg border border-border bg-card p-4 shadow-card">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[15px] font-semibold text-card-foreground">{c.name}</p>

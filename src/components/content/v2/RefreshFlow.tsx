@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, CalendarRange, Check, Circle, Infinity as InfinityIcon, PartyPopper, Plus, Sparkle, Trash2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Circle, PartyPopper, Plus, Sparkle, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sparkle as SparkIcon } from "@/components/ai/Sparkle";
-import { EmailMock, fill } from "@/components/content/shared";
+import { AiMark, EmailMock, fill } from "@/components/content/shared";
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
+import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
 import { SmsPreview } from "@/components/editor/SmsPreview";
 import { DIRECTIONS, HOTEL, TONES, monthName, seasonalFor, type MonthPerformance, type PeriodCopy, type SeasonalSuggestion, type UpdatePreferences } from "@/lib/contentV2";
 
@@ -46,6 +49,7 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
   const [channel, setChannel] = useState<"email" | "text">("email");
   const [mode, setMode] = useState<"preview" | "compare" | "insight">("preview");
   const [draft, setDraft] = useState<PeriodCopy | null>(null);
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([]);
 
   const recommended = periodOptions.find((p) => p.id === setup.recommendedId) ?? periodOptions[0];
   const first = periodOptions.find((p) => p.id === selected[0]) ?? recommended;
@@ -58,9 +62,6 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
     setSeasonalUsed(null);
     setSeasonalRemoved(false);
   }, [selected, setup.recommendedId]);
-
-  const extendOptions = periodOptions.filter((p) => p.id !== selected[0]);
-  const fullYear = selected.length >= periodOptions.length;
 
   const startGenerate = () => {
     setStep("generating");
@@ -91,56 +92,56 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
   ];
 
   const stepIndex = STEP_LABELS.findIndex((s) => s.id === step);
+  const assistantIntro = step === "when" ? "Which period should we refresh? Your existing year-round content remains in place until you approve an update. I recommend starting with the next uncovered period, but you can choose another."
+    : step === "how" ? `For ${first.label}, I recommend keeping your current voice and using a light, timely angle where it fits. You can change the tone, direction, or tell me what to emphasize.`
+    : step === "plan" ? `Here's my suggestion for ${first.label}. Review the choices below, then approve writing. Nothing publishes automatically.`
+    : step === "review" ? "Your draft is ready. Compare it with your current message, edit anything you like, then decide whether to publish." : "";
+  const submitInstruction = (text: string) => {
+    const instruction = text.trim();
+    if (!instruction) return;
+    setMessages((value) => [...value, { role: "user", text: instruction }]);
+    const period = periodOptions.find((option) => instruction.toLowerCase().includes(option.short.toLowerCase()));
+    if (step === "when" && period) setSelected([period.id]);
+    if (step === "how" || step === "plan") {
+      setNote(instruction);
+      setNoteOpen(true);
+      if (/short|concise/i.test(instruction)) setTone("concise");
+      else if (/warm|welcom/i.test(instruction)) setTone("warmer");
+      if (/no holiday|no seasonal|general/i.test(instruction)) { setSeasonalUsed(null); setSeasonalRemoved(true); setDirection("general"); }
+      else if (/season|event|holiday/i.test(instruction)) setDirection("seasonal");
+    }
+    setMessages((value) => [...value, { role: "assistant", text: step === "when" ? period ? `I'll focus on ${period.label}. You can adjust the selection before continuing.` : "Choose a period below, or mention its month by name." : "I've added that to your preferences. Review the choices below before I write anything." }]);
+  };
 
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-foreground/70 p-2 backdrop-blur-sm sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <section role="dialog" aria-modal="true" aria-label="Update with AI" className="flex h-[94vh] w-full max-w-[1080px] flex-col overflow-hidden rounded-lg border border-border bg-canvas shadow-float">
+      <section role="dialog" aria-modal="true" aria-label="Update with AI" className="flex h-[94vh] w-full max-w-[1080px] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-float">
         <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3 sm:px-6">
-          <span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand text-brand-foreground"><SparkIcon size={16} /></span>
+          <AiMark size={36} live={step === "generating"} />
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-[16px] font-semibold text-card-foreground">Update with AI</h2>
-            <p className="text-[11.5px] text-muted-foreground">{learning ? learning : "AI suggests. You decide. Nothing publishes until you review it."}</p>
+            <h2 className="truncate text-[16px] font-semibold text-card-foreground">Content assistant</h2>
+            <p className="text-[11.5px] text-muted-foreground">{HOTEL} · AI suggests, you decide</p>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close"><X /></Button>
         </header>
 
-        <nav aria-label="Progress" className="flex flex-wrap items-center gap-1.5 border-b border-border bg-card/60 px-4 py-2.5 sm:px-6">
-          {STEP_LABELS.map((s, i) => (
-            <span key={s.id} className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold ${s.id === step ? "bg-brand text-brand-foreground" : i < stepIndex ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"}`}>
-              {i < stepIndex ? <Check size={11} /> : null}{s.label}
-            </span>
-          ))}
-        </nav>
-
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-canvas px-4 py-6 sm:px-6">
+          <div className="mx-auto max-w-4xl">
+            <p className="mb-4 text-[11px] font-semibold uppercase text-brand">{step === "done" ? "Published" : step === "generating" ? "Writing your update" : STEP_LABELS[stepIndex]?.label}</p>
+            {assistantIntro && <Conversation className="mb-6 max-h-[240px] min-h-[120px] rounded-md border border-border bg-card"><ConversationContent className="space-y-3 p-4"><Message from="assistant"><MessageContent className="bg-transparent p-0"><MessageResponse>{assistantIntro}</MessageResponse></MessageContent></Message>{learning && <Message from="assistant"><MessageContent className="bg-transparent p-0"><MessageResponse>{learning}</MessageResponse></MessageContent></Message>}{messages.map((item, index) => <Message key={index} from={item.role}><MessageContent className={item.role === "user" ? "bg-primary text-primary-foreground" : "bg-transparent p-0"}><MessageResponse>{item.text}</MessageResponse></MessageContent></Message>)}</ConversationContent><ConversationScrollButton /></Conversation>}
           {step === "when" && (
-            <div className="mx-auto max-w-2xl space-y-5">
+              <div className="mx-auto max-w-2xl space-y-5">
               <div>
                 <h3 className="text-[19px] font-semibold text-card-foreground">What would you like to update?</h3>
-                <p className="mt-1 text-[12.5px] text-muted-foreground">The recommendation is based on when your content will actually be used, not just the calendar.</p>
+                <p className="mt-1 text-[12.5px] text-muted-foreground">Upcoming periods still use year-round content. Choose when you want something fresh.</p>
               </div>
               {learning && <div className="rounded-md border border-brand/25 bg-brand-soft/50 px-4 py-3 text-[12px] text-card-foreground"><Sparkle size={13} className="mr-1.5 inline text-brand" />{learning}</div>}
-              <button onClick={() => setSelected([recommended.id])} className={`block w-full rounded-lg border p-4 text-left transition-colors ${selected[0] === recommended.id ? "border-brand bg-brand-soft/40" : "border-border bg-card hover:border-brand/40"}`}>
+              <Button variant="outline" onClick={() => setSelected([recommended.id])} className={`block h-auto w-full whitespace-normal p-4 text-left ${selected[0] === recommended.id ? "border-brand bg-brand-soft/40" : "border-border bg-card"}`}>
                 <p className="flex items-center gap-2 text-[10.5px] font-semibold uppercase text-brand"><Sparkle size={12} />Recommended update period</p>
                 <p className="mt-1.5 text-[17px] font-semibold text-card-foreground">{recommended.label}</p>
                 <p className="mt-1 text-[12px] text-muted-foreground">{recommended.blurb}</p>
-              </button>
-              <div className="rounded-lg border border-border bg-card p-4">
-                <p className="flex items-center gap-2 text-[13.5px] font-semibold text-card-foreground"><CalendarRange size={15} className="text-brand" />Extend this update</p>
-                <p className="mt-1 text-[12px] text-muted-foreground">Refresh content for additional upcoming months so your automated invites stay fresh further into the year.</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {extendOptions.map((p) => (
-                    <button key={p.id} onClick={() => setSelected((cur) => [cur[0], ...cur.slice(1).includes(p.id) ? [] : [p.id]])} className={`rounded-md border px-3 py-1.5 text-[12px] font-medium transition-colors ${selected.includes(p.id) ? "border-brand bg-brand text-brand-foreground" : "border-border bg-background text-card-foreground hover:border-brand/40"}`}>
-                      {p.short}
-                    </button>
-                  ))}
-                </div>
-                {selected.length > 1 && <p className="mt-2 text-[11px] text-muted-foreground">{selected.map((id) => periodOptions.find((p) => p.id === id)?.short).join(" → ")} — you can stop at any point.</p>}
-              </div>
-              <button onClick={() => setSelected(periodOptions.map((p) => p.id))} className={`block w-full rounded-lg border p-4 text-left transition-colors ${fullYear ? "border-brand bg-brand-soft/40" : "border-border bg-card hover:border-brand/40"}`}>
-                <p className="flex items-center gap-2 text-[13.5px] font-semibold text-card-foreground"><InfinityIcon size={15} className="text-brand" />Full year</p>
-                <p className="mt-1 text-[12px] text-muted-foreground">Refresh your automated invite content across the year — one simple update, no month-by-month setup.</p>
-              </button>
+              </Button>
+              <div className="flex flex-wrap gap-2">{periodOptions.filter((option) => option.id !== recommended.id).map((option) => <Button key={option.id} variant={selected[0] === option.id ? "brand" : "outline"} size="sm" onClick={() => setSelected([option.id])}>{option.label}</Button>)}</div>
             </div>
           )}
 
@@ -154,10 +155,10 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
                 <legend className="text-[11px] font-semibold uppercase text-muted-foreground">Tone</legend>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   {TONES.map((t) => (
-                    <button key={t.id} onClick={() => setTone(t.id)} className={`rounded-lg border p-3 text-left transition-colors ${tone === t.id ? "border-brand bg-brand-soft/40" : "border-border bg-card hover:border-brand/40"}`}>
+                    <Button key={t.id} variant="outline" onClick={() => setTone(t.id)} className={`block h-auto whitespace-normal p-3 text-left ${tone === t.id ? "border-brand bg-brand-soft/40" : "border-border bg-card"}`}>
                       <p className="text-[13px] font-semibold text-card-foreground">{t.label}{t.id === "current" && <span className="ml-1.5 rounded-sm bg-brand-soft px-1.5 py-0.5 text-[9.5px] font-semibold text-brand">Recommended</span>}</p>
                       <p className="mt-0.5 text-[11.5px] text-muted-foreground">{t.note}</p>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </fieldset>
@@ -166,10 +167,10 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
                 <p className="mt-1 text-[11.5px] text-muted-foreground">AI can recommend one — you don't have to choose.</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   {DIRECTIONS.map((d) => (
-                    <button key={d.id} onClick={() => setDirection(d.id)} className={`rounded-lg border p-3 text-left transition-colors ${direction === d.id ? "border-brand bg-brand-soft/40" : "border-border bg-card hover:border-brand/40"}`}>
+                    <Button key={d.id} variant="outline" onClick={() => setDirection(d.id)} className={`block h-auto whitespace-normal p-3 text-left ${direction === d.id ? "border-brand bg-brand-soft/40" : "border-border bg-card"}`}>
                       <p className="text-[13px] font-semibold text-card-foreground">{d.label}{d.id === "general" && <span className="ml-1.5 rounded-sm bg-brand-soft px-1.5 py-0.5 text-[9.5px] font-semibold text-brand">Recommended</span>}</p>
                       <p className="mt-0.5 text-[11.5px] text-muted-foreground">{d.note}</p>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </fieldset>
@@ -193,7 +194,7 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
                     <Input placeholder="e.g. Focus more on relaxation. Keep the messaging promotional." value={note} onChange={(e) => setNote(e.target.value)} />
                     <div className="flex flex-wrap gap-1.5">
                       {["Focus more on relaxation.", "Keep the messaging promotional.", "Don't mention holidays."].map((s) => (
-                        <button key={s} onClick={() => setNote(s)} className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:border-brand/40 hover:text-foreground">{s}</button>
+                        <Button key={s} variant="outline" size="sm" onClick={() => setNote(s)}>{s}</Button>
                       ))}
                     </div>
                     <p className="text-[11px] text-muted-foreground">Optional and lightweight — AI keeps it simple.</p>
@@ -331,20 +332,13 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
                 <h3 className="text-[20px] font-semibold text-card-foreground">{first.label} is published</h3>
                 <p className="mt-1.5 text-[13px] text-muted-foreground">12 / 31 properties using this content. You can check performance in Results at any time.</p>
               </div>
-              <div className="rounded-lg border border-border bg-card p-4 text-left">
-                <p className="text-[13.5px] font-semibold text-card-foreground">Would you like to extend this further?</p>
-                <p className="mt-1 text-[12px] text-muted-foreground">Refresh your content for the next few months now, so you don't have to come back later.</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {extendOptions.filter((p) => p.id === periodOptions[periodOptions.findIndex((o) => o.id === first.id) + 1]?.id).map((p) => (
-                    <Button key={p.id} size="sm" variant="outline" onClick={() => { setSelected([p.id, ...selected.filter((id) => id !== p.id)]); setStep("when"); }}>Update {p.short}</Button>
-                  ))}
-                  <Button size="sm" variant="outline" onClick={() => { setSelected(periodOptions.slice(periodOptions.findIndex((o) => o.id === first.id) + 1).map((p) => p.id)); setStep("when"); }}>Update the rest of the year</Button>
-                </div>
-              </div>
               <Button variant="brand" onClick={onClose}>I'm done for now</Button>
             </div>
           )}
+          </div>
         </div>
+
+        {(step === "when" || step === "how" || step === "plan") && <div className="shrink-0 border-t border-border bg-card px-4 py-3 sm:px-6"><div className="mx-auto max-w-4xl"><PromptInput onSubmit={(message) => submitInstruction(message.text)}><PromptInputTextarea placeholder={step === "when" ? "Tell me which month you'd like to update…" : "Tell me what you'd like the content to sound like…"} /><PromptInputFooter className="justify-end"><PromptInputSubmit status="ready" className="size-8" /></PromptInputFooter></PromptInput></div></div>}
 
         {step !== "generating" && step !== "done" && (
           <footer className="flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3 sm:px-6">
