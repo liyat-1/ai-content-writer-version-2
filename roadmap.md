@@ -277,3 +277,10 @@
 - [x] V2 results: overview + campaigns, month navigation, AI insight, prior-better card with Improve with AI / Review historical version comparison
 - [x] Route /content/v2 with head metadata; Library V2 nav entries (desktop + mobile)
 - [x] Typecheck clean; verify in preview, no console errors
+
+## Content Library V2 page completion
+- [x] Make AI notice the first screen and reveal the content schedule only after Keep current or AI update
+- [x] Rebuild the V2 contents view with V1-style schedule header, campaign cards, property adoption, and history navigation
+- [x] Move V2 Results to a separate page and keep metrics there, with review and AI improvement actions
+- [x] Retain AI update preferences so subsequent updates reopen with the original choices
+- [x] Verify content, Results, and update paths in the preview

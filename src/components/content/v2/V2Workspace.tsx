@@ -1,279 +1,111 @@
-import { useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, Info, Sparkle, Users, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { CalendarDays, ChevronLeft, ChevronRight, Clock3, Mail, MessageSquare, Pencil, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CampaignEditor } from "@/components/marketing/CampaignEditor";
+import { TestCampaignDialog } from "@/components/marketing/MarketingDialogs";
+import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { EmailMock, fill } from "@/components/content/shared";
+import { EDITOR_ID, MONTH_PACKAGES, packageSnippet, useLibrary } from "@/lib/contentLibrary";
+import { useMarketing } from "@/lib/marketing";
 import { RefreshFlow, type FlowSetup } from "./RefreshFlow";
-import { V2Results } from "./V2Results";
+import { generateCopy } from "./generateCopy";
 import {
-  DEMO_TODAY, HOTEL, TOTAL_PROPERTIES, USAGE_ROWS, dismissPusher, publishPeriod, useHistoricalVersion, useV2,
+  HOTEL, TOTAL_PROPERTIES, USAGE_ROWS, dismissPusher, publishPeriod, useHistoricalVersion, useV2,
   type Period, type PeriodCopy,
 } from "@/lib/contentV2";
 
-type View = "content" | "results";
-
-/* ------- AI copy generation: refreshes the current voice for the selected months ------- */
-
-const MONTH_COPY: Record<number, { subject: string; heading: string; body: string }> = {
-  9: { subject: "{first_name}, October in Midtown is yours", heading: "Crisp evenings. Bright lights. Your city.", body: "October is one of the best months to be in New York — crisp walks past Central Park, Broadway at its best and the rooftop lit up over the city. Your room in the heart of Times Square is waiting. Book direct for our best rate and a warm welcome at check-in." },
-  10: { subject: "{first_name}, Thanksgiving in Midtown?", heading: "Come back for the parade", body: "The Thanksgiving Parade passes four blocks from our door, and November in Midtown is full of moments worth coming back for. Your room above Times Square is waiting. Book now for our best rate and a warm welcome at check-in." },
-  11: { subject: "{first_name}, December belongs in Midtown", heading: "A festive December awaits", body: "Fifth Avenue's holiday windows, the Rockefeller tree and Midtown at its most magical — all steps from your room above Times Square. Book now for our best rate and a warm welcome at check-in." },
-  0: { subject: "{first_name}, a new year in New York", heading: "Start the year in the city", body: "January in Midtown is calm, bright and full of possibilities. Your room above Times Square is waiting whenever you're ready. Book direct for our best rate and a warm welcome at check-in." },
-};
-
-function generateCopy(month: number, tone: string, direction: string, seasonal: string | null, note: string): PeriodCopy {
-  const base = MONTH_COPY[month] ?? MONTH_COPY[9];
-  const seasonalOn = seasonal !== null && (direction !== "general" || true); // suggestion already accepted explicitly
-  let body = base.body;
-  if (tone === "concise") body = body.split("—")[0].trim() + ". Book now for our best rate.";
-  if (tone === "warmer") body = "We'd love to welcome you back. " + body;
-  if (direction === "promotional") body = body.replace("Book direct for our best rate", "Our best rate of the season is live — book direct");
-  if (note) body = `${note.replace(/\.$/, "")}. ` + body;
-  return {
-    email: {
-      subject: seasonalOn && month === 10 ? base.subject : MONTH_COPY[month]?.subject ?? base.subject,
-      preheader: seasonalOn ? "A seasonal reason to come back — plus your best direct rate." : "Your best direct rate, always.",
-      heading: base.heading,
-      body: seasonalOn || direction !== "general" ? body : "It's been a while since your last stay. Your room in the heart of Times Square is waiting. Book direct for our best rate and a warm welcome at check-in.",
-      cta: tone === "concise" || direction === "promotional" ? "Book now — best rate" : "Plan my return",
-    },
-    text: seasonalOn
-      ? `Hi {first_name}! ${seasonal} is 4 blocks from us. Your room above Times Square is waiting — best rate direct: {booking_link}`
-      : `Hi {first_name}, your room above Times Square is waiting. Best rate direct: {booking_link}`,
-  };
-}
-
-/* ------- small pieces ------- */
-
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return <div className="min-w-0"><p className="text-[10.5px] font-semibold uppercase text-muted-foreground">{label}</p><p className={`mt-0.5 text-[15px] font-semibold ${accent ? "text-brand" : "text-card-foreground"}`}>{value}</p></div>;
-}
-
-function VersionCard({ period, onViewContent, onViewProperties, onUse }: { period: Period; onViewContent: () => void; onViewProperties: () => void; onUse: (p: Period) => void }) {
-  const active = period.status === "Current";
-  return (
-    <article className={`rounded-lg border bg-card p-4 shadow-card ${active ? "border-brand/40" : "border-border"}`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-[15px] font-semibold text-card-foreground">{period.label}</p>
-          <p className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
-            {period.aiAssisted && <Sparkle size={12} className="text-brand" />}{period.originLabel}
-            {period.publishedAt && <> · Updated {period.publishedAt}</>}
-          </p>
-        </div>
-        <span className={`rounded-sm px-2 py-0.5 text-[10.5px] font-semibold ${active ? "bg-brand text-brand-foreground" : period.status === "Upcoming" ? "bg-muted text-muted-foreground" : "bg-brand-soft text-brand"}`}>{active ? "Current" : period.status}</span>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-3">
-        <Stat label="Properties using" value={active || period.status === "Published" ? `${period.properties} / ${TOTAL_PROPERTIES}` : period.previouslyUsedBy ? `${period.previouslyUsedBy} previously` : "—"} />
-        {period.performance && <Stat label="Click rate" value={`${period.performance.click}%`} accent={period.performance.clickDelta > 0} />}
-        {period.performance && <Stat label="Click-to-book" value={`${period.performance.ctb}%`} accent={period.performance.ctbDelta > 0} />}
-        <div className="ml-auto flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={onViewContent}>View content</Button>
-          <Button size="sm" variant="ghost" onClick={onViewProperties}><Users size={13} />Properties</Button>
-          {!active && !period.aiAssisted && <Button size="sm" variant="brand" onClick={() => onUse(period)}>Use this version</Button>}
-        </div>
-      </div>
-    </article>
-  );
-}
-
-/* ------- main workspace ------- */
-
 export function V2Workspace() {
   const v2 = useV2();
-  const [view, setView] = useState<View>("content");
+  const { campaigns } = useMarketing();
+  const { campaigns: libraryCampaigns } = useLibrary();
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (window.sessionStorage.getItem("content-v2-entered") === "true") setEntered(true); }, []);
+  const revealContent = () => { window.sessionStorage.setItem("content-v2-entered", "true"); setEntered(true); };
   const [flow, setFlow] = useState<FlowSetup | null>(null);
-  const [introDismissed, setIntroDismissed] = useState(false);
   const [introOpen, setIntroOpen] = useState(false);
-  const [monthIdx, setMonthIdx] = useState(2); // October
-  const [contentOpen, setContentOpen] = useState<Period | null>(null);
-  const [propsOpen, setPropsOpen] = useState<Period | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [contentOpen, setContentOpen] = useState<{ name: string; text: string; email?: PeriodCopy["email"] } | null>(null);
+  const [propsOpen, setPropsOpen] = useState(false);
   const [confirmUse, setConfirmUse] = useState<Period | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [testing, setTesting] = useState<string | null>(null);
 
   const periods = v2.periods;
-  const current = periods.find((p) => p.status === "Current");
+  const current = periods.find((p) => p.status === "Current") ?? periods[2];
   const nextUp = periods.find((p) => p.status === "Upcoming");
   const shownPeriods = periods.filter((p) => p.status !== "Upcoming" || v2.nextReady === p.id);
-  const selectedPeriod = shownPeriods[Math.min(monthIdx, shownPeriods.length - 1)];
-
+  const selected = shownPeriods.find((p) => p.id === selectedId) ?? current;
+  const selectedIndex = shownPeriods.findIndex((p) => p.id === selected.id);
+  const recommended = nextUp ?? current;
   const periodOptions = periods.filter((p) => p.status === "Upcoming" || p.status === "Current").map((p) => ({
     id: p.id, label: p.label, short: p.short, month: Number(p.id.slice(5)) - 1,
-    dateRange: `${p.short} 1–30, 2026`, blurb: p.status === "Current" ? `${p.short} is active now — the next content your guests will see.` : `The next period without fresh content.`,
+    dateRange: `${p.short} 1–30, 2026`, blurb: p.status === "Current" ? `${p.short} is active now — the next content your guests will see.` : "The next period without fresh content.",
   }));
-  const recommended = nextUp ?? periods[2];
+  const openUpdate = (period: Period = recommended) => setFlow({ recommendedId: period.id, preferences: period.preferences, context: period.preferences?.context });
+  const showNotice = !entered;
+  const pack = MONTH_PACKAGES.find((p) => p.month === Number(selected.id.slice(5)) - 1 && p.year === 2026);
+  const invites = campaigns.filter((c) => c.group === "invites");
 
-  const pusherState = !v2.pusherDismissed && nextUp ? (v2.nextReady === nextUp.id ? "ready" : "suggest") : "off";
-
-  return (
-    <div className="mx-auto max-w-[1200px] px-4 pb-16 pt-6 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <p className="text-[10.5px] font-semibold uppercase text-brand">Content / Library V2</p>
-          <h1 className="mt-2 font-display text-[30px] font-semibold text-card-foreground sm:text-[36px]">Content Library</h1>
-          <p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">One simple loop: refresh with AI, review, publish, and see how it performs. You always decide.</p>
-        </div>
-        <div className="flex rounded-md bg-muted p-1">
-          {(["content", "results"] as const).map((v) => (
-            <Button key={v} size="sm" variant={view === v ? "secondary" : "ghost"} onClick={() => setView(v)}>{v === "content" ? "Content" : "Results"}</Button>
-          ))}
-        </div>
-      </header>
-
-      {view === "results" ? (
-        <V2Results onImprove={(learning) => setFlow({ recommendedId: recommended.id, context: learning })} />
-      ) : (
-        <div className="space-y-6 pt-6">
-          {/* Initial AI refresh intro — dismissible */}
-          {!introDismissed && (
-            <section className="ai-edge relative overflow-hidden rounded-lg p-6 sm:p-8">
-              <div aria-hidden className="ai-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(80%_80%_at_20%_0%,black,transparent)]" />
-              <div className="relative flex flex-wrap items-start justify-between gap-4">
-                <div className="max-w-xl">
-                  <p className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-brand"><Sparkle size={11} />New</p>
-                  <h2 className="mt-3 font-display text-[24px] font-semibold leading-tight text-card-foreground sm:text-[28px]">Refresh your content with AI</h2>
-                  <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">Directful AI can refresh your automated invite content for the period ahead — based on your current content, your tone, and the moments that matter. Nothing publishes until you review it.</p>
-                  <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px] text-muted-foreground">
-                    <span>Last updated: 30 days ago</span>
-                    <span>Next suggested update: {nextUp?.short}</span>
-                  </div>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <Button variant="brand" onClick={() => setFlow({ recommendedId: recommended.id })}><Sparkle size={14} />Update with AI</Button>
-                    <Button variant="outline" onClick={() => setIntroOpen(true)}>Learn how it works</Button>
-                    <Button variant="ghost" onClick={() => setIntroDismissed(true)}>Keep current content</Button>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" aria-label="Dismiss" onClick={() => setIntroDismissed(true)}><X size={16} /></Button>
-              </div>
-            </section>
-          )}
-
-          {/* Contextual pusher */}
-          {nextUp && pusherState !== "off" && (
-            <section aria-live="polite" className={`rounded-lg border p-4 sm:p-5 ${pusherState === "ready" ? "border-brand/40 bg-brand-soft/40" : "border-warning/40 bg-warning-soft/40"}`}>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className={`grid size-9 shrink-0 place-items-center rounded-md ${pusherState === "ready" ? "bg-brand text-brand-foreground" : "bg-warning text-background"}`}><CalendarDays size={16} /></span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold text-card-foreground">{pusherState === "ready" ? `${nextUp.short} content is ready` : `Prepare your ${nextUp.short} content`}</p>
-                  <p className="mt-0.5 text-[12px] text-muted-foreground">
-                    {pusherState === "ready"
-                      ? "Your AI-assisted update is ready to publish whenever you are."
-                      : `${current?.label} is active now. ${nextUp.short} starts soon — AI can prepare it from your current content in a couple of minutes.`}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="brand" onClick={() => setFlow({ recommendedId: nextUp.id })}><Sparkle size={13} />Update with AI</Button>
-                  <Button size="sm" variant="ghost" onClick={() => dismissPusher()}>Not now</Button>
-                </div>
-              </div>
-            </section>
-          )}
-          {v2.pusherDismissed && nextUp && pusherState === "off" && (
-            <button onClick={() => setFlow({ recommendedId: nextUp.id })} className="flex w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-left text-[12px] text-muted-foreground transition-colors hover:border-brand/40">
-              <Info size={13} className="shrink-0 text-brand" />Reminder: {v2.nextReady === nextUp.id ? `${nextUp.short} content is ready to publish` : `Prepare ${nextUp.short} content when you're ready`}
-            </button>
-          )}
-
-          {/* Current content timer */}
-          {current && (
-            <section className="rounded-lg border border-border bg-card p-4 shadow-card sm:p-5">
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-                <div>
-                  <p className="text-[10.5px] font-semibold uppercase text-muted-foreground">Current content</p>
-                  <p className="mt-0.5 text-[17px] font-semibold text-card-foreground">{current.label}</p>
-                </div>
-                <span className="rounded-sm bg-brand-soft px-2 py-0.5 text-[10.5px] font-semibold text-brand">Active</span>
-                <Stat label="Running" value={`${DEMO_TODAY.day} days`} />
-                <Stat label="Properties using" value={`${current.properties} / ${TOTAL_PROPERTIES}`} />
-                <Stat label="Next period" value={nextUp?.label ?? "—"} />
-                {current.performance && <Stat label="Click rate" value={`${current.performance.click}%`} accent />}
-                <div className="ml-auto"><Button size="sm" variant="brand" onClick={() => setFlow({ recommendedId: recommended.id })}><Sparkle size={13} />Update with AI</Button></div>
-              </div>
-            </section>
-          )}
-
-          {/* Published content, month-based navigation */}
-          <section aria-label="Published content">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <h2 className="text-[16px] font-semibold text-card-foreground">Published content</h2>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="size-7" aria-label="Previous month" disabled={monthIdx === 0} onClick={() => setMonthIdx((m) => Math.max(0, m - 1))}><ChevronLeft size={15} /></Button>
-                <p className="min-w-[150px] text-center text-[14px] font-semibold text-card-foreground">{selectedPeriod?.label}</p>
-                <Button variant="ghost" size="icon" className="size-7" aria-label="Next month" disabled={monthIdx >= shownPeriods.length - 1} onClick={() => setMonthIdx((m) => Math.min(shownPeriods.length - 1, m + 1))}><ChevronRight size={15} /></Button>
-              </div>
+  return <MarketingShell title="Content Library · V2">
+    <main className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6">
+      {showNotice ? (
+        <section className="ai-surface relative flex min-h-[calc(100dvh-170px)] items-center justify-center overflow-hidden rounded-lg border border-border px-5 py-12 text-center sm:px-8" aria-label="Refresh your content with AI">
+          <div aria-hidden className="ai-grid pointer-events-none absolute inset-0 opacity-50" />
+          <div className="relative max-w-2xl">
+            <span className="mx-auto grid size-12 place-items-center rounded-md bg-brand text-brand-foreground shadow-card"><Sparkles size={23} /></span>
+            <p className="mt-6 text-[11px] font-semibold uppercase text-brand">{HOTEL}</p>
+            <h1 className="mt-3 font-display text-[32px] font-semibold leading-tight text-card-foreground sm:text-[42px]">Refresh your content with AI</h1>
+            <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">Refresh your automated invites for the period ahead using your current content and the moments that matter. Nothing publishes until you review it.</p>
+            <p className="mt-5 text-[12px] text-muted-foreground">Current content: {current.label} · Next suggested update: {nextUp?.short ?? "—"}</p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
+              <Button variant="brand" size="lg" onClick={() => openUpdate()}><Sparkles size={15} />Update with AI</Button>
+               <Button variant="outline" size="lg" onClick={revealContent}>Keep current content</Button>
             </div>
-            <div className="mt-4 space-y-3">
-              {selectedPeriod && <VersionCard period={selectedPeriod} onViewContent={() => setContentOpen(selectedPeriod)} onViewProperties={() => setPropsOpen(selectedPeriod)} onUse={setConfirmUse} />}
-              {v2.publishedCount > 0 && <p className="text-center text-[11.5px] text-muted-foreground">{v2.publishedCount} AI-assisted {v2.publishedCount === 1 ? "update" : "updates"} published so far — all previous versions are kept in history.</p>}
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* Update with AI flow */}
-      {flow && (
-        <RefreshFlow
-          setup={flow}
-          periodOptions={periodOptions}
-          baseCopy={current?.copy ?? periods[2].copy}
-          aiCopy={({ month, tone, direction, seasonal, note }) => [generateCopy(month, tone, direction, seasonal?.name ?? null, note)]}
-          learning={flow.context}
-          onPublish={({ periodId, copy }) => { publishPeriod(periodId, copy, true); setFlow(null); setMonthIdx(shownPeriods.findIndex((p) => p.id === periodId) >= 0 ? shownPeriods.findIndex((p) => p.id === periodId) : monthIdx); }}
-          onClose={() => setFlow(null)}
-        />
-      )}
-
-      {/* View content dialog */}
-      <Dialog open={!!contentOpen} onOpenChange={(o) => !o && setContentOpen(null)}>
-        <DialogContent className="max-w-lg" overlayClassName="bg-foreground/60">
-          <DialogHeader><DialogTitle>{contentOpen?.label} content</DialogTitle></DialogHeader>
-          <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
-            <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-brand"><Sparkle size={12} />{contentOpen?.originLabel}</p>
-            <EmailMock email={contentOpen?.copy.email ?? { subject: "", preheader: "", heading: "", body: "", cta: "" }} image="lobby" />
-            <div className="rounded-md bg-muted/40 p-3"><p className="text-[10.5px] font-semibold uppercase text-muted-foreground">Text message</p><p className="mt-1 text-[12.5px] text-card-foreground">{fill(contentOpen?.copy.text ?? "")}</p></div>
+            <Button variant="ghost" size="sm" className="mt-3" onClick={() => setIntroOpen(true)}>How it works</Button>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Properties dialog */}
-      <Dialog open={!!propsOpen} onOpenChange={(o) => !o && setPropsOpen(null)}>
-        <DialogContent className="max-w-md" overlayClassName="bg-foreground/60">
-          <DialogHeader><DialogTitle>Properties · {propsOpen?.label}</DialogTitle></DialogHeader>
-          <ul className="max-h-[55vh] space-y-1.5 overflow-y-auto pr-1">
-            {USAGE_ROWS.map((row) => (
-              <li key={row.property} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-[12.5px]">
-                <span className="truncate text-card-foreground">{row.property}</span>
-                <span className={`shrink-0 rounded-sm px-1.5 py-0.5 text-[10px] font-semibold ${row.using === "suggested" ? "bg-brand-soft text-brand" : "bg-muted text-muted-foreground"}`}>{row.using === "suggested" ? "Suggested content" : "Custom content"}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="text-[11px] text-muted-foreground">Publishing a new version never changes properties that use their own content.</p>
-        </DialogContent>
-      </Dialog>
-
-      {/* Use historical version confirmation */}
-      <Dialog open={!!confirmUse} onOpenChange={(o) => !o && setConfirmUse(null)}>
-        <DialogContent className="max-w-md" overlayClassName="bg-foreground/60">
-          <DialogHeader><DialogTitle>Use this version?</DialogTitle></DialogHeader>
-          <p className="text-[13px] leading-relaxed text-muted-foreground">This will make the <strong className="text-card-foreground">{confirmUse?.label}</strong> content your current suggested content. It won't be sent to properties using custom content, and your current version is kept in history. Publishing still requires your review before anything goes out.</p>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setConfirmUse(null)}>Cancel</Button>
-            <Button variant="brand" onClick={() => { if (confirmUse) useHistoricalVersion(confirmUse.id); setConfirmUse(null); }}>Use this version</Button>
+        </section>
+      ) : <>
+        <header className="flex flex-wrap items-end justify-between gap-4 pb-6">
+          <div><p className="text-[11px] font-semibold uppercase text-brand">Content Library / V2</p><h1 className="mt-2 font-display text-[30px] font-semibold text-card-foreground sm:text-[36px]">Your content</h1><p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">One shared set of guest messages, used throughout the year.</p></div>
+          <Button variant="brand" onClick={() => openUpdate(selected.status === "Current" ? selected : recommended)}><Sparkles size={15} />Update with AI</Button>
+        </header>
+        {nextUp && !v2.pusherDismissed && <section className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/35 px-4 py-3 sm:px-5">
+          <span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-soft text-brand"><CalendarDays size={17} /></span>
+          <div className="min-w-0 flex-1"><p className="text-[13px] font-semibold text-card-foreground">Prepare your {nextUp.short} content</p><p className="text-[11.5px] text-muted-foreground">Your current content stays live until you review and publish an update.</p></div>
+          <Button size="sm" variant="brand" onClick={() => openUpdate(nextUp)}><Sparkles size={13} />Update</Button><Button size="sm" variant="ghost" onClick={dismissPusher}>Not now</Button>
+        </section>}
+        <section className="overflow-hidden rounded-lg border border-border bg-card shadow-card" aria-label="Monthly published content">
+          <div className="ai-surface grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-5 sm:px-6">
+            <Button variant="outline" size="icon" aria-label="Previous month" disabled={selectedIndex <= 0} onClick={() => setSelectedId(shownPeriods[selectedIndex - 1]?.id ?? null)}><ChevronLeft size={17} /></Button>
+            <div className="min-w-0 text-center"><p className="flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase text-brand"><CalendarDays size={13} />Content schedule</p><h2 className="mt-1 text-[22px] font-semibold text-card-foreground">{selected.label}</h2><div className="mt-2 flex flex-wrap items-center justify-center gap-2"><span className={`rounded-sm px-2 py-1 text-[10px] font-semibold ${selected.status === "Current" ? "bg-brand text-brand-foreground" : "bg-muted text-muted-foreground"}`}>{selected.status === "Current" ? "Live now" : selected.status === "Upcoming" ? "Scheduled" : "Previously published"}</span><span className="text-[11px] text-muted-foreground">{selected.status === "Upcoming" ? "Year-round foundation" : selected.originLabel}</span></div><Button size="sm" variant="ghost" className="mt-1 h-7" onClick={() => setPropsOpen(true)}><Users size={13} />{selected.status === "Previous" ? `${selected.previouslyUsedBy ?? 0} previously` : `${selected.properties} / ${TOTAL_PROPERTIES} properties using`}</Button></div>
+            <Button variant="outline" size="icon" aria-label="Next month" disabled={selectedIndex >= shownPeriods.length - 1} onClick={() => setSelectedId(shownPeriods[selectedIndex + 1]?.id ?? null)}><ChevronRight size={17} /></Button>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Learn how it works */}
-      <Dialog open={introOpen} onOpenChange={setIntroOpen}>
-        <DialogContent className="max-w-md" overlayClassName="bg-foreground/60">
-          <DialogHeader><DialogTitle>How AI refresh works</DialogTitle></DialogHeader>
-          <ol className="space-y-2.5">
-            {["Choose when — AI recommends the period based on when content will actually be used.", "Choose how — keep your tone or try a new one; accept or skip seasonal suggestions.", "Review the plan — you see exactly what AI will do before anything is written.", "Review content — compare with your current version, edit anything, then publish.", "Track results — see how the update performed, and carry forward what worked."].map((s, i) => (
-              <li key={s} className="flex items-start gap-2.5 text-[12.5px] text-card-foreground"><span className="grid size-5 shrink-0 place-items-center rounded-full bg-brand-soft text-[10px] font-bold text-brand">{i + 1}</span>{s}</li>
-            ))}
-          </ol>
-          <div className="flex justify-end"><Button variant="brand" onClick={() => { setIntroOpen(false); setFlow({ recommendedId: recommended.id }); }}><Sparkle size={13} />Try it now</Button></div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+          <div className="space-y-7 p-4 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"><div><h3 className="text-[15px] font-semibold text-card-foreground">Automated Invites <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{invites.length}</span></h3></div>{selected.aiAssisted && selected.preferences && <Button size="sm" variant="outline" onClick={() => openUpdate(selected)}><Pencil size={13} />Edit AI update</Button>}</div>
+            {selected.aiAssisted && selected.preferences && <div className="flex flex-wrap items-start gap-3 border-l-2 border-brand bg-brand-soft/30 px-4 py-3 text-[12px]"><Sparkles size={15} className="mt-0.5 shrink-0 text-brand" /><div><p className="font-semibold text-card-foreground">How this version was written</p><p className="mt-0.5 text-muted-foreground">Tone: {selected.preferences.tone} · Direction: {selected.preferences.direction}{selected.preferences.note ? ` · “${selected.preferences.note}”` : ""}{selected.preferences.context ? ` · Inspired by: ${selected.preferences.context}` : ""}</p></div></div>}
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{invites.map((campaign) => {
+              const libraryCampaign = libraryCampaigns.find((item) => EDITOR_ID[item.id] === campaign.id);
+              const text = campaign.id === "after-last-visit" ? selected.copy.text : libraryCampaign && pack ? packageSnippet(libraryCampaign, pack, "direct") : campaign.variants.direct.text.message;
+              const email = campaign.id === "after-last-visit" ? selected.copy.email : libraryCampaign?.content.direct.email;
+              return <article key={campaign.id} className="flex min-h-[240px] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-card transition-colors hover:border-brand/30">
+                <div className="flex-1 p-4"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-soft text-brand">{campaign.strategy === "text" ? <MessageSquare size={15} /> : <Mail size={15} />}</span><div className="min-w-0"><h4 className="text-[14px] font-semibold text-card-foreground">{campaign.name}</h4><p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground"><Clock3 size={12} />{campaign.timing}</p></div></div><div className="mt-4 rounded-md bg-canvas p-3"><p className="text-[10px] font-semibold uppercase text-muted-foreground">Text preview</p><p className="mt-1 line-clamp-3 text-[12px] leading-relaxed text-card-foreground">“{fill(text)}”</p></div></div>
+                <div className="flex flex-wrap items-center gap-1 border-t border-border p-2"><Button size="sm" variant="ghost" onClick={() => setContentOpen({ name: campaign.name, text, email })}>View content</Button><Button size="sm" variant="ghost" onClick={() => setTesting(campaign.id)}>Test</Button><Button size="sm" variant="brand" className="ml-auto" onClick={() => setEditing(campaign.id)}><Pencil size={13} />Edit content</Button></div>
+              </article>;
+            })}</div>
+            {selected.status === "Previous" && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5"><p className="text-[12px] text-muted-foreground">This version is kept in your content history.</p><Button variant="outline" onClick={() => setConfirmUse(selected)}>Review & use this version</Button></div>}
+          </div>
+        </section>
+        <div className="mt-5 text-right"><Link to="/content/results-v2" className="text-[12px] font-semibold text-brand hover:underline">View content results →</Link></div>
+      </>}
+    </main>
+     {flow && <RefreshFlow key={`${flow.recommendedId}-${flow.context ?? ""}`} setup={flow} periodOptions={periodOptions} baseCopy={current.copy} aiCopy={({ month, tone, direction, seasonal, note }) => [generateCopy(month, tone, direction, seasonal?.name ?? null, note)]} learning={flow.context} onPublish={({ periodId, copy, preferences }) => { publishPeriod(periodId, copy, true, preferences); setSelectedId(periodId); revealContent(); setFlow(null); }} onClose={() => setFlow(null)} />}
+    <Dialog open={introOpen} onOpenChange={setIntroOpen}><DialogContent className="max-w-md"><DialogHeader><DialogTitle>How AI refresh works</DialogTitle></DialogHeader><p className="text-[13px] leading-relaxed text-muted-foreground">Choose a period and how you want it written. Review the plan and the new messages before publishing. Your current version stays available in the schedule.</p><div className="flex justify-end"><Button variant="brand" onClick={() => { setIntroOpen(false); openUpdate(); }}>Update with AI</Button></div></DialogContent></Dialog>
+    <Dialog open={!!contentOpen} onOpenChange={(open) => !open && setContentOpen(null)}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>{contentOpen?.name} · {selected.label}</DialogTitle></DialogHeader><div className="max-h-[65vh] space-y-3 overflow-y-auto">{contentOpen?.email && <EmailMock email={contentOpen.email} image="lobby" />}<div className="rounded-md bg-muted/40 p-3"><p className="text-[10px] font-semibold uppercase text-muted-foreground">Text message</p><p className="mt-1 text-[12px] text-card-foreground">{fill(contentOpen?.text ?? "")}</p></div></div></DialogContent></Dialog>
+    <Dialog open={propsOpen} onOpenChange={setPropsOpen}><DialogContent className="max-w-md"><DialogHeader><DialogTitle>Properties · {selected.label}</DialogTitle></DialogHeader><p className="text-[12px] text-muted-foreground">{selected.status === "Previous" ? `${selected.previouslyUsedBy ?? 0} properties previously used this content.` : `${selected.properties} of ${TOTAL_PROPERTIES} properties use this content. Others keep their own version.`}</p><ul className="max-h-[50vh] space-y-1.5 overflow-y-auto">{USAGE_ROWS.map((row) => <li key={row.property} className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-[12px]"><span className="min-w-0 truncate text-card-foreground">{row.property}</span><span className="shrink-0 text-muted-foreground">{row.using === "suggested" ? "Shared" : "Custom"}</span></li>)}</ul></DialogContent></Dialog>
+    <Dialog open={!!confirmUse} onOpenChange={(open) => !open && setConfirmUse(null)}><DialogContent className="max-w-md"><DialogHeader><DialogTitle>Use {confirmUse?.label} content?</DialogTitle></DialogHeader><p className="text-[13px] leading-relaxed text-muted-foreground">Review the messages in this period before switching. Your current version is kept in history; properties using custom content are unchanged.</p><div className="max-h-48 overflow-y-auto rounded-md bg-muted/40 p-3 text-[12px] text-card-foreground"><p className="font-semibold">{confirmUse?.copy.email.subject}</p><p className="mt-1">{confirmUse?.copy.email.body}</p><p className="mt-2 border-t border-border pt-2">{confirmUse?.copy.text}</p></div><div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setConfirmUse(null)}>Cancel</Button><Button variant="brand" onClick={() => { if (confirmUse) { useHistoricalVersion(confirmUse.id); setSelectedId(confirmUse.id); } setConfirmUse(null); }}>Use this version</Button></div></DialogContent></Dialog>
+    {editing && <CampaignEditor id={editing} onClose={() => setEditing(null)} />}
+    <TestCampaignDialog campaign={campaigns.find((c) => c.id === testing) ?? null} open={Boolean(testing)} onClose={() => setTesting(null)} />
+  </MarketingShell>;
 }

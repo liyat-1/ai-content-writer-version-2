@@ -24,6 +24,7 @@ import { Route as ContentPerformanceRouteImport } from './routes/content.perform
 import { Route as ContentPublishedRouteImport } from './routes/content.published'
 import { Route as ContentReleasesRouteImport } from './routes/content.releases'
 import { Route as ContentResultsRouteImport } from './routes/content.results'
+import { Route as ContentResultsV2RouteImport } from './routes/content.results-v2'
 import { Route as ContentSettingsRouteImport } from './routes/content.settings'
 import { Route as ContentV2RouteImport } from './routes/content.v2'
 import { Route as MarketingAiContentRouteImport } from './routes/marketing.ai-content'
@@ -113,6 +114,11 @@ const ContentReleasesRoute = ContentReleasesRouteImport.update({
 const ContentResultsRoute = ContentResultsRouteImport.update({
   id: '/content/results',
   path: '/content/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContentResultsV2Route = ContentResultsV2RouteImport.update({
+  id: '/content/results-v2',
+  path: '/content/results-v2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContentSettingsRoute = ContentSettingsRouteImport.update({
@@ -206,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/content/published': typeof ContentPublishedRoute
   '/content/releases': typeof ContentReleasesRoute
   '/content/results': typeof ContentResultsRoute
+  '/content/results-v2': typeof ContentResultsV2Route
   '/content/settings': typeof ContentSettingsRoute
   '/content/v2': typeof ContentV2Route
   '/marketing/ai-content': typeof MarketingAiContentRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/content/published': typeof ContentPublishedRoute
   '/content/releases': typeof ContentReleasesRoute
   '/content/results': typeof ContentResultsRoute
+  '/content/results-v2': typeof ContentResultsV2Route
   '/content/settings': typeof ContentSettingsRoute
   '/content/v2': typeof ContentV2Route
   '/marketing/ai-content': typeof MarketingAiContentRoute
@@ -270,6 +278,7 @@ export interface FileRoutesById {
   '/content/published': typeof ContentPublishedRoute
   '/content/releases': typeof ContentReleasesRoute
   '/content/results': typeof ContentResultsRoute
+  '/content/results-v2': typeof ContentResultsV2Route
   '/content/settings': typeof ContentSettingsRoute
   '/content/v2': typeof ContentV2Route
   '/marketing/ai-content': typeof MarketingAiContentRoute
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/content/published'
     | '/content/releases'
     | '/content/results'
+    | '/content/results-v2'
     | '/content/settings'
     | '/content/v2'
     | '/marketing/ai-content'
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/content/published'
     | '/content/releases'
     | '/content/results'
+    | '/content/results-v2'
     | '/content/settings'
     | '/content/v2'
     | '/marketing/ai-content'
@@ -367,6 +378,7 @@ export interface FileRouteTypes {
     | '/content/published'
     | '/content/releases'
     | '/content/results'
+    | '/content/results-v2'
     | '/content/settings'
     | '/content/v2'
     | '/marketing/ai-content'
@@ -400,6 +412,7 @@ export interface RootRouteChildren {
   ContentPublishedRoute: typeof ContentPublishedRoute
   ContentReleasesRoute: typeof ContentReleasesRoute
   ContentResultsRoute: typeof ContentResultsRoute
+  ContentResultsV2Route: typeof ContentResultsV2Route
   ContentSettingsRoute: typeof ContentSettingsRoute
   ContentV2Route: typeof ContentV2Route
   MarketingAiContentRoute: typeof MarketingAiContentRoute
@@ -516,6 +529,13 @@ declare module '@tanstack/react-router' {
       path: '/content/results'
       fullPath: '/content/results'
       preLoaderRoute: typeof ContentResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/content/results-v2': {
+      id: '/content/results-v2'
+      path: '/content/results-v2'
+      fullPath: '/content/results-v2'
+      preLoaderRoute: typeof ContentResultsV2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/content/settings': {
@@ -663,6 +683,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContentPublishedRoute: ContentPublishedRoute,
   ContentReleasesRoute: ContentReleasesRoute,
   ContentResultsRoute: ContentResultsRoute,
+  ContentResultsV2Route: ContentResultsV2Route,
   ContentSettingsRoute: ContentSettingsRoute,
   ContentV2Route: ContentV2Route,
   MarketingAiContentRoute: MarketingAiContentRoute,

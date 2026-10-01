@@ -6,15 +6,16 @@
 import { useSyncExternalStore } from "react";
 
 export const RESULTS_MONTHS = [
-  { id: "2026-08", label: "August 2026", click: 4.1, clickDelta: 0.7, ctb: 1.9, ctbDelta: 0.4, sends: "1,842", sendsDelta: "+3% vs July", aiSummary: "August was the strongest month of the quarter — the seasonal hook in After Last Visit drove the best click rate. Worth carrying that pattern forward." },
-  { id: "2026-09", label: "September 2026", click: 3.8, clickDelta: -0.3, ctb: 1.6, ctbDelta: -0.3, sends: "1,905", sendsDelta: "+3% vs August", aiSummary: "A small dip after August's strong month as the seasonal hook faded. A fresh reason-to-return angle should lift After Last Visit again." },
-  { id: "2026-10", label: "October 2026", click: 3.6, clickDelta: -0.2, ctb: 1.5, ctbDelta: -0.1, sends: "1,968", sendsDelta: "+3% vs September", aiSummary: "The current version is holding steady, but August's parade-themed version still holds the quarter's best click rate — a good direction for the next update." },
+  { id: "2026-08", label: "August 2026", click: 4.1, clickDelta: 0.7, ctb: 1.9, ctbDelta: 0.4, sends: "1,842", sendsDelta: "+3% vs July", aiSummary: "August was the strongest month of the quarter — the concise After Last Visit invitation and direct-booking CTA drove the best click rate. Worth carrying that pattern forward." },
+  { id: "2026-09", label: "September 2026", click: 3.8, clickDelta: -0.3, ctb: 1.6, ctbDelta: -0.3, sends: "1,905", sendsDelta: "+3% vs August", aiSummary: "A small dip after August's strong month. A clearer reason-to-return angle should lift After Last Visit again." },
+  { id: "2026-10", label: "October 2026", click: 3.6, clickDelta: -0.2, ctb: 1.5, ctbDelta: -0.1, sends: "1,968", sendsDelta: "+3% vs September", aiSummary: "The current version is holding steady, but August's concise direct-booking invitation still holds the quarter's best click rate — a good direction for the next update." },
 ];
 
 /* ------------------------------ types ------------------------------ */
 
 export type EmailCopy = { subject: string; preheader: string; heading: string; body: string; cta: string };
 export type PeriodCopy = { email: EmailCopy; text: string };
+export type UpdatePreferences = { tone: string; direction: string; seasonalId: string | null; note: string; context?: string };
 
 export type PeriodStatus = "Current" | "Published" | "Previous" | "Upcoming";
 
@@ -32,6 +33,7 @@ export type Period = {
   properties: number;
   previouslyUsedBy?: number;
   copy: PeriodCopy;
+  preferences?: UpdatePreferences;
   performance?: MonthPerformance;
   insight?: { changed: string[]; why: string; result?: string };
 };
@@ -118,6 +120,7 @@ const PERIODS: Period[] = [
     id: "2026-09", label: "September 2026", short: "September", status: "Previous", aiAssisted: true,
     originLabel: "AI-assisted update", publishedAt: "Sep 2, 2026", updatedDaysAgo: 48,
     properties: 0, previouslyUsedBy: 12, copy: septemberCopy,
+    preferences: { tone: "current", direction: "seasonal", seasonalId: null, note: "Keep the autumn reference light." },
     performance: { click: 5.8, clickDelta: 0.7, ctb: 2.5, ctbDelta: 0.2, spam: 0.5, spamDelta: 0 },
     insight: {
       changed: ["Added a light autumn reference", "Kept your familiar email layout"],
@@ -128,6 +131,7 @@ const PERIODS: Period[] = [
     id: "2026-10", label: "October 2026", short: "October", status: "Current", aiAssisted: true,
     originLabel: "AI-assisted update", publishedAt: "Sep 20, 2026", updatedDaysAgo: 30,
     properties: 12, copy: octoberCopy,
+    preferences: { tone: "current", direction: "seasonal", seasonalId: "halloween", note: "Keep the rooftop and Broadway in the invitation." },
     performance: { click: 6.2, clickDelta: 2.4, ctb: 2.8, ctbDelta: 0.6, spam: 0.4, spamDelta: -0.2 },
     insight: {
       changed: ["Shortened the message", "Made the CTA more direct", "Added light October seasonal context"],
@@ -164,11 +168,11 @@ const set = (fn: (s: State) => State) => { state = fn(state); emit(); };
 export function dismissPusher() { set((s) => ({ ...s, pusherDismissed: true })); }
 
 /** Publish reviewed content: becomes the current suggested content for the period. */
-export function publishPeriod(id: string, copy: PeriodCopy, aiAssisted: boolean) {
+export function publishPeriod(id: string, copy: PeriodCopy, aiAssisted: boolean, preferences?: UpdatePreferences) {
   set((s) => ({
     ...s,
     periods: s.periods.map((p) => p.id === id
-      ? { ...p, status: "Current" as PeriodStatus, aiAssisted, originLabel: aiAssisted ? "AI-assisted update" : "Updated by you", publishedAt: `Oct 20, 2026`, updatedDaysAgo: 0, properties: 12, copy: clone(copy) }
+      ? { ...p, status: "Current" as PeriodStatus, aiAssisted, originLabel: aiAssisted ? "AI-assisted update" : "Updated by you", publishedAt: `Oct 20, 2026`, updatedDaysAgo: 0, properties: 12, copy: clone(copy), preferences: preferences ? clone(preferences) : undefined }
       : p.id === currentId(s) ? { ...p, status: "Previous" as PeriodStatus, previouslyUsedBy: p.properties } : p),
     pusherDismissed: false,
     publishedCount: s.publishedCount + 1,

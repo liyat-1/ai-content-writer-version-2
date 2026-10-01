@@ -3,7 +3,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Sparkle, TrendingUp } from "luci
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AiMark, EmailMock } from "@/components/content/shared";
-import { AUGUST_ALV, RESULTS_MONTHS } from "@/lib/contentV2";
+import { AUGUST_ALV, RESULTS_MONTHS, useV2 } from "@/lib/contentV2";
 
 type CampaignResult = {
   id: string; name: string; properties: number; click: number; clickDelta: number; ctb: number; ctbDelta: number;
@@ -12,8 +12,8 @@ type CampaignResult = {
 
 const CAMPAIGN_RESULTS: Record<string, CampaignResult[]> = {
   "2026-08": [
-    { id: "alv", name: "After Last Visit", properties: 4, click: 4.1, clickDelta: 0.7, ctb: 1.9, ctbDelta: 0.4, aiInsight: "The August version outperformed July with guests who stayed 2+ nights — the parade hook in the subject drove the strongest opens of the quarter.", prior: { label: "July 2026", click: 3.4, ctb: 1.5 }, priorBetter: false },
-    { id: "welcome", name: "Pre-Arrival Welcome", properties: 4, click: 3.2, clickDelta: -0.3, ctb: 1.1, ctbDelta: -0.2, aiInsight: "Slightly below July — send time may be a factor. Try 10:00 AM instead of 8:00 AM for leisure guests.", prior: { label: "July 2026", click: 3.5, ctb: 1.3 }, priorBetter: true },
+    { id: "alv", name: "After Last Visit", properties: 4, click: 4.1, clickDelta: 0.7, ctb: 1.9, ctbDelta: 0.4, aiInsight: "The August version outperformed July with guests who stayed 2+ nights — its concise invitation and direct-booking CTA worked well.", prior: { label: "July 2026", click: 3.4, ctb: 1.5 }, priorBetter: false },
+    { id: "welcome", name: "Pre-Arrival Welcome", properties: 4, click: 3.2, clickDelta: -0.3, ctb: 1.1, ctbDelta: -0.2, aiInsight: "Slightly below July — send time may be a factor. Try 10:00 AM instead of 8:00 AM for leisure guests.", prior: { label: "July 2026", click: 3.5, ctb: 1.3 }, priorBetter: false },
   ],
   "2026-09": [
     { id: "alv", name: "After Last Visit", properties: 4, click: 3.8, clickDelta: -0.3, ctb: 1.6, ctbDelta: -0.3, aiInsight: "A small dip after August's strong month. The seasonal hook faded — a fresh reason-to-return angle should lift it again.", prior: { label: "August 2026", click: 4.1, ctb: 1.9 }, priorBetter: true },
@@ -26,6 +26,7 @@ const CAMPAIGN_RESULTS: Record<string, CampaignResult[]> = {
 };
 
 export function V2Results({ onImprove }: { onImprove: (learning: string) => void }) {
+  const { periods } = useV2();
   const [mi, setMi] = useState(RESULTS_MONTHS.length - 1);
   const [tab, setTab] = useState<"overview" | "campaigns">("overview");
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -34,13 +35,13 @@ export function V2Results({ onImprove }: { onImprove: (learning: string) => void
   const campaigns = CAMPAIGN_RESULTS[m.id] ?? [];
   const alv = campaigns.find((c) => c.priorBetter);
   const improvementLearning = alv?.prior
-    ? `August's After Last Visit version outperformed the current one (4.1% vs ${m.click}% clicks): a concrete seasonal hook in the subject and a direct come-back call to action. Write the new version in that direction, refreshed for the new period.`
+    ? `August's After Last Visit version outperformed the current one (${alv.prior.click}% vs ${alv.click}% clicks). Its short invitation and direct-booking CTA worked well. Write a fresh version for the next period in that direction.`
     : undefined;
 
   return (
     <div className="space-y-6 pt-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1">
+         <div className="flex items-center gap-1 rounded-md border border-border bg-card p-1 shadow-card">
           <Button variant="ghost" size="icon" className="size-7" aria-label="Previous month" disabled={mi === 0} onClick={() => setMi((x) => x - 1)}><ChevronLeft size={15} /></Button>
           <p className="min-w-[140px] text-center text-[14px] font-semibold text-card-foreground">{m.label}</p>
           <Button variant="ghost" size="icon" className="size-7" aria-label="Next month" disabled={mi >= RESULTS_MONTHS.length - 1} onClick={() => setMi((x) => x + 1)}><ChevronRight size={15} /></Button>
@@ -79,16 +80,15 @@ export function V2Results({ onImprove }: { onImprove: (learning: string) => void
           </section>
 
           {alv?.prior && improvementLearning && (
-            <section className="rounded-lg border border-border bg-card p-4 shadow-card sm:p-5">
+             <section className="rounded-lg border border-border bg-card p-4 shadow-card sm:p-5">
               <div className="flex flex-wrap items-start gap-3">
                 <span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-soft text-brand"><TrendingUp size={16} /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] font-semibold text-card-foreground">{alv.prior.label} content did better</p>
-                  <p className="mt-0.5 text-[12.5px] text-muted-foreground">{alv.prior.label} clicked {alv.prior.click}% vs {m.click}% this month on {alv.name}. AI can write the next version in that direction — you review before anything is published.</p>
+                   <p className="mt-0.5 text-[12.5px] text-muted-foreground">{alv.prior.label} clicked {alv.prior.click}% vs {alv.click}% for {alv.name}. Review both messages, then use what worked to write the next version.</p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Button size="sm" variant="brand" onClick={() => onImprove(improvementLearning)}><Sparkle size={13} />Improve with AI<ArrowRight size={13} /></Button>
                     <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)}>Review {alv.prior.label} version</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setTab("overview")}>Keep current</Button>
+                   <Button size="sm" variant="brand" onClick={() => onImprove(improvementLearning)}><Sparkle size={13} />Improve with AI<ArrowRight size={13} /></Button>
                   </div>
                 </div>
               </div>
@@ -113,7 +113,7 @@ export function V2Results({ onImprove }: { onImprove: (learning: string) => void
               </div>
               {c.priorBetter && c.prior && (
                 <div className="mt-3 border-t border-border pt-3">
-                  <Button size="sm" variant="outline" onClick={() => { setTab("overview"); setReviewOpen(true); }}>Use previous version ({c.prior.label} · {c.prior.click}% clicks) — review first</Button>
+                   <Button size="sm" variant="outline" onClick={() => { setTab("overview"); setReviewOpen(true); }}>Review previous version ({c.prior.label} · {c.prior.click}% clicks)</Button>
                 </div>
               )}
             </article>
@@ -124,7 +124,7 @@ export function V2Results({ onImprove }: { onImprove: (learning: string) => void
       {/* Review prior version: current vs historical */}
       <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
         <DialogContent className="max-w-3xl" overlayClassName="bg-foreground/60">
-          <DialogHeader><DialogTitle>August version vs current</DialogTitle></DialogHeader>
+           <DialogHeader><DialogTitle>August version vs {m.label}</DialogTitle></DialogHeader>
           <div className="max-h-[62vh] overflow-y-auto pr-1">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -132,21 +132,21 @@ export function V2Results({ onImprove }: { onImprove: (learning: string) => void
                 <EmailMock email={AUGUST_ALV.email} image="rooftop" />
               </div>
               <div>
-                <p className="mb-2 text-[10.5px] font-semibold uppercase text-muted-foreground">Current · {m.click}% clicks</p>
-                <EmailMock email={{ subject: "It's been a while, {first_name}", preheader: "Your room above Times Square is waiting", heading: "Come back to the city", body: "It's been a while since your last stay. Your room in the heart of Times Square is waiting. Book direct for our best rate and a warm welcome at check-in.", cta: "Plan my return" }} image="lobby" />
+                 <p className="mb-2 text-[10.5px] font-semibold uppercase text-muted-foreground">{m.label} · {alv?.click}% clicks</p>
+                 <EmailMock email={periods.find((p) => p.id === m.id)?.copy.email ?? periods[2].copy.email} image="lobby" />
               </div>
             </div>
             <div className="mt-4 rounded-md border border-brand/30 bg-brand-soft/30 p-3.5">
-              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase text-brand"><Sparkle size={12} />What made August better</p>
+               <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase text-brand"><Sparkle size={12} />What to carry forward</p>
               <ul className="mt-1.5 space-y-1 text-[12.5px] text-card-foreground">
-                <li>• A concrete, time-bound hook in the subject ("the parade is four blocks away") instead of a generic invitation.</li>
-                <li>• A direct come-back CTA ("Book now — best rate") that matched the seasonal moment.</li>
+                 <li>• August's copy is shorter and leads with a straightforward return invitation.</li>
+                 <li>• Its “Book now — best rate” button makes the direct-booking benefit explicit. Carry the pattern forward with a timely new message.</li>
               </ul>
             </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setReviewOpen(false)}>Close</Button>
-            <Button variant="brand" onClick={() => setReviewOpen(false)}>Use this direction in the next update</Button>
+             <Button variant="brand" onClick={() => { setReviewOpen(false); if (improvementLearning) onImprove(improvementLearning); }}>Write next update in this direction</Button>
           </div>
         </DialogContent>
       </Dialog>
