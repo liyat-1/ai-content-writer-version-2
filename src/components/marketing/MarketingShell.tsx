@@ -51,7 +51,7 @@ const GROUPS: { label?: string; items: Item[] }[] = [
     items: [
       { label: "Content", to: "/content", icon: Sparkles },
       { label: "Library V2", to: "/content/v2", icon: Sparkle },
-       { label: "Results V2", to: "/content/results-v2", icon: BarChart3 },
+      { label: "Results V2", to: "/content/results-v2", icon: BarChart3 },
       { label: "Events & Holidays", to: "/content/events", icon: CalendarDays },
       { label: "Results", to: "/content/results", icon: BarChart3 },
       { label: "Settings", to: "/content/settings", icon: Settings2 },
@@ -166,7 +166,7 @@ export function MarketingShell({
                 </p>
               )}
               {group.items.map((item) => {
-                const active = item.to ? (item.to === "/content" ? pathname === "/content" || pathname === "/content" : pathname.startsWith(item.to)) : false;
+                const active = item.to ? (item.to === "/content" || item.to === "/content/results" ? pathname === item.to : pathname.startsWith(item.to)) : false;
                 const cls = `flex w-full items-center gap-2.5 rounded-md py-[7px] text-left text-[12.5px] transition-colors ${
                   collapsed ? "justify-center px-0" : "px-2.5"
                 } ${
@@ -227,7 +227,7 @@ export function MarketingShell({
 
         <div className="flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 lg:hidden">
           {MOBILE_NAV.map((item) => {
-            const active = item.to === "/content" ? pathname === "/content" || pathname === "/content" : pathname.startsWith(item.to);
+            const active = item.to === "/content" || item.to === "/content/results" ? pathname === item.to : pathname.startsWith(item.to);
             return (
               <Link
                 key={item.to}
