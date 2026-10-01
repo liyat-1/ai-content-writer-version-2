@@ -17,6 +17,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
+  Sparkle,
   FlaskConical,
   History,
   Settings2,
