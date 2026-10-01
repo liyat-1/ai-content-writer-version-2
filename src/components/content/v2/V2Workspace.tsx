@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { CampaignEditor } from "@/components/marketing/CampaignEditor";
 import { TestCampaignDialog } from "@/components/marketing/MarketingDialogs";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { EmailMock, fill } from "@/components/content/shared";
+import { AiMark, EmailMock, fill } from "@/components/content/shared";
 import { EDITOR_ID, MONTH_PACKAGES, packageSnippet, useLibrary } from "@/lib/contentLibrary";
 import { useMarketing } from "@/lib/marketing";
 import { RefreshFlow, type FlowSetup } from "./RefreshFlow";
@@ -35,7 +35,7 @@ export function V2Workspace() {
   const periods = v2.periods;
   const current = periods.find((p) => p.status === "Current") ?? periods[2];
   const nextUp = periods.find((p) => p.status === "Upcoming");
-  const shownPeriods = periods.filter((p) => p.status !== "Upcoming" || v2.nextReady === p.id);
+  const shownPeriods = periods;
   const selected = shownPeriods.find((p) => p.id === selectedId) ?? current;
   const selectedIndex = shownPeriods.findIndex((p) => p.id === selected.id);
   const recommended = nextUp ?? current;
@@ -54,11 +54,10 @@ export function V2Workspace() {
         <section className="ai-surface relative flex min-h-[calc(100dvh-170px)] items-center justify-center overflow-hidden rounded-lg border border-border px-5 py-12 text-center sm:px-8" aria-label="Refresh your content with AI">
           <div aria-hidden className="ai-grid pointer-events-none absolute inset-0 opacity-50" />
           <div className="relative max-w-2xl">
-            <span className="mx-auto grid size-12 place-items-center rounded-md bg-brand text-brand-foreground shadow-card"><Sparkles size={23} /></span>
-            <p className="mt-6 text-[11px] font-semibold uppercase text-brand">{HOTEL}</p>
-            <h1 className="mt-3 font-display text-[32px] font-semibold leading-tight text-card-foreground sm:text-[42px]">Refresh your content with AI</h1>
-            <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">Refresh your automated invites for the period ahead using your current content and the moments that matter. Nothing publishes until you review it.</p>
-            <p className="mt-5 text-[12px] text-muted-foreground">Current content: {current.label} · Next suggested update: {nextUp?.short ?? "—"}</p>
+             <span className="inline-block ai-float"><AiMark size={52} live /></span>
+             <p className="mt-6 text-[11px] font-semibold uppercase text-brand">New in Content Library · {HOTEL}</p>
+             <h1 className="mt-3 font-display text-[32px] font-semibold leading-tight text-card-foreground sm:text-[42px]">Write your content with AI</h1>
+             <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">A new way to refresh your automated invites. Choose when to update, get recommendations, and shape the message in your own voice. Review everything before you publish.</p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
               <Button variant="brand" size="lg" onClick={() => openUpdate()}><Sparkles size={15} />Update with AI</Button>
                <Button variant="outline" size="lg" onClick={revealContent}>Keep current content</Button>
@@ -69,12 +68,12 @@ export function V2Workspace() {
       ) : <>
         <header className="flex flex-wrap items-end justify-between gap-4 pb-6">
           <div><p className="text-[11px] font-semibold uppercase text-brand">Content Library / V2</p><h1 className="mt-2 font-display text-[30px] font-semibold text-card-foreground sm:text-[36px]">Your content</h1><p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">One shared set of guest messages, used throughout the year.</p></div>
-          <Button variant="brand" onClick={() => openUpdate(selected.status === "Current" ? selected : recommended)}><Sparkles size={15} />Update with AI</Button>
+           <Button variant="brand" onClick={() => openUpdate(selected.status === "Upcoming" || selected.status === "Current" ? selected : recommended)}><Sparkles size={15} />Update with AI</Button>
         </header>
-        {nextUp && !v2.pusherDismissed && <section className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/35 px-4 py-3 sm:px-5">
+         {selected.status === "Upcoming" && !v2.pusherDismissed && <section className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/35 px-4 py-3 sm:px-5">
           <span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-soft text-brand"><CalendarDays size={17} /></span>
-          <div className="min-w-0 flex-1"><p className="text-[13px] font-semibold text-card-foreground">Prepare your {nextUp.short} content</p><p className="text-[11.5px] text-muted-foreground">Your current content stays live until you review and publish an update.</p></div>
-          <Button size="sm" variant="brand" onClick={() => openUpdate(nextUp)}><Sparkles size={13} />Update</Button><Button size="sm" variant="ghost" onClick={dismissPusher}>Not now</Button>
+           <div className="min-w-0 flex-1"><p className="text-[13px] font-semibold text-card-foreground">Refresh your {selected.short} content</p><p className="text-[11.5px] text-muted-foreground">The year-round content below is set to run unless you publish a fresh update. Your current content stays live until then.</p></div>
+           <Button size="sm" variant="brand" onClick={() => openUpdate(selected)}><Sparkles size={13} />Refresh {selected.short}</Button><Button size="sm" variant="ghost" onClick={dismissPusher}>Not now</Button>
         </section>}
         <section className="overflow-hidden rounded-lg border border-border bg-card shadow-card" aria-label="Monthly published content">
           <div className="ai-surface grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-5 sm:px-6">
