@@ -271,7 +271,7 @@ export function V2Workspace() {
               <li key={s} className="flex items-start gap-2.5 text-[12.5px] text-card-foreground"><span className="grid size-5 shrink-0 place-items-center rounded-full bg-brand-soft text-[10px] font-bold text-brand">{i + 1}</span>{s}</li>
             ))}
           </ol>
-          <div className="flex justify-end"><Button variant="brand" onClick={() => { setIntroOpen(false); setFlow({ recommendedId: recommended.id }); }}><Sparkle size={13} />Try it now<ArrowRight size={13} /></Button></div>
+          <div className="flex justify-end"><Button variant="brand" onClick={() => { setIntroOpen(false); setFlow({ recommendedId: recommended.id }); }}><Sparkle size={13} />Try it now</Button></div>
         </DialogContent>
       </Dialog>
     </div>

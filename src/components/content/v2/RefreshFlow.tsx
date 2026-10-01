@@ -344,7 +344,7 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
 
         {step !== "generating" && step !== "done" && (
           <footer className="flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3 sm:px-6">
-            <Button variant="ghost" disabled={step === "when"} onClick={() => setStep(step === "review" && generated.length ? "generating" : step === "generating" ? "plan" : step === "review" ? "plan" : step === "publishing" ? "review" : step === "plan" ? "how" : "when")}>
+            <Button variant="ghost" disabled={step === "when"} onClick={() => setStep(step === "review" && generated.length ? "generating" : step === "review" ? "plan" : step === "publishing" ? "review" : step === "plan" ? "how" : "when")}>
               <ArrowLeft size={14} />Back
             </Button>
             {step === "when" && <Button variant="brand" disabled={!selected.length} onClick={() => setStep("how")}>Continue<ArrowRight size={14} /></Button>}

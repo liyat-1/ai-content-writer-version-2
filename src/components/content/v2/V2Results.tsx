@@ -33,7 +33,7 @@ export function V2Results({ onImprove }: { onImprove: (learning: string) => void
   const m = RESULTS_MONTHS[mi];
   const campaigns = CAMPAIGN_RESULTS[m.id] ?? [];
   const alv = campaigns.find((c) => c.priorBetter);
-  const improvementLearning = alv
+  const improvementLearning = alv?.prior
     ? `August's After Last Visit version outperformed the current one (4.1% vs ${m.click}% clicks): a concrete seasonal hook in the subject and a direct come-back call to action. Write the new version in that direction, refreshed for the new period.`
     : undefined;
 
