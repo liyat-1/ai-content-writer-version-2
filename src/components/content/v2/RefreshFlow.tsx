@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Sparkle as SparkIcon } from "@/components/ai/Sparkle";
 import { EmailMock, fill } from "@/components/content/shared";
 import { SmsPreview } from "@/components/editor/SmsPreview";
-import { DIRECTIONS, HOTEL, TONES, monthName, seasonalFor, type MonthPerformance, type PeriodCopy, type SeasonalSuggestion } from "@/lib/contentV2";
+import { DIRECTIONS, HOTEL, TONES, monthName, seasonalFor, type MonthPerformance, type PeriodCopy, type SeasonalSuggestion, type UpdatePreferences } from "@/lib/contentV2";
 
-export type FlowSetup = { recommendedId: string; context?: string };
+export type FlowSetup = { recommendedId: string; context?: string; preferences?: UpdatePreferences };
 
 type StepId = "when" | "how" | "plan" | "generating" | "review" | "publishing" | "done";
 
@@ -27,19 +27,19 @@ type Props = {
   aiCopy: (args: { month: number; tone: string; direction: string; seasonal: SeasonalSuggestion | null; note: string; extendIds: string[] }) => PeriodCopy[];
   performanceFor?: (month: number) => MonthPerformance | undefined;
   learning?: string;
-  onPublish: (payload: { periodId: string; copy: PeriodCopy; aiAssisted: boolean }) => void;
+  onPublish: (payload: { periodId: string; copy: PeriodCopy; aiAssisted: boolean; preferences: UpdatePreferences }) => void;
   onClose: () => void;
 };
 
 export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanceFor, learning, onPublish, onClose }: Props) {
   const [step, setStep] = useState<StepId>("when");
   const [selected, setSelected] = useState<string[]>([setup.recommendedId]);
-  const [tone, setTone] = useState<string>("current");
-  const [direction, setDirection] = useState<string>("general");
-  const [seasonalUsed, setSeasonalUsed] = useState<SeasonalSuggestion | null>(null);
-  const [seasonalRemoved, setSeasonalRemoved] = useState(false);
-  const [note, setNote] = useState("");
-  const [noteOpen, setNoteOpen] = useState(false);
+  const [tone, setTone] = useState<string>(setup.preferences?.tone ?? "current");
+  const [direction, setDirection] = useState<string>(setup.preferences?.direction ?? "general");
+  const [seasonalUsed, setSeasonalUsed] = useState<SeasonalSuggestion | null>(setup.preferences?.seasonalId ? seasonalFor(Number(setup.recommendedId.slice(5)) - 1) : null);
+  const [seasonalRemoved, setSeasonalRemoved] = useState(setup.preferences?.seasonalId === null && Boolean(setup.preferences));
+  const [note, setNote] = useState(setup.preferences?.note ?? "");
+  const [noteOpen, setNoteOpen] = useState(Boolean(setup.preferences?.note));
   const [genStage, setGenStage] = useState(0);
   const [generated, setGenerated] = useState<PeriodCopy[]>([]);
   const [seg, setSeg] = useState<"direct" | "ota">("direct");
@@ -53,7 +53,11 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
   const suggestionLive: SeasonalSuggestion | null = seasonalUsed !== null ? seasonalUsed : (!seasonalRemoved ? suggestion : null);
 
   // Keep the seasonal suggestion in sync when the period changes and the hotel hasn't decided yet.
-  useEffect(() => { setSeasonalUsed(null); setSeasonalRemoved(false); }, [selected[0]]);
+  useEffect(() => {
+    if (selected[0] === setup.recommendedId) return;
+    setSeasonalUsed(null);
+    setSeasonalRemoved(false);
+  }, [selected, setup.recommendedId]);
 
   const extendOptions = periodOptions.filter((p) => p.id !== selected[0]);
   const fullYear = selected.length >= periodOptions.length;
@@ -315,7 +319,7 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
               </div>
               <div className="flex justify-center gap-2">
                 <Button variant="ghost" onClick={() => setStep("review")}>Keep current</Button>
-                <Button variant="brand" onClick={() => onPublish({ periodId: first.id, copy: draft, aiAssisted: true })}>Publish</Button>
+                 <Button variant="brand" onClick={() => onPublish({ periodId: first.id, copy: draft, aiAssisted: true, preferences: { tone, direction, seasonalId: suggestionLive?.id ?? null, note, context: learning } })}>Publish</Button>
               </div>
             </div>
           )}
