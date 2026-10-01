@@ -39,6 +39,7 @@ import { Route as OtaOfferRouteImport } from './routes/ota.offer'
 import { Route as OtaOpportunitiesRouteImport } from './routes/ota.opportunities'
 import { Route as OtaPerformanceRouteImport } from './routes/ota.performance'
 import { Route as OtaSettingsRouteImport } from './routes/ota.settings'
+import { Route as ContentV2ResultsRouteImport } from './routes/content.v2.results'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -190,6 +191,11 @@ const OtaSettingsRoute = OtaSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => OtaRoute,
 } as any)
+const ContentV2ResultsRoute = ContentV2ResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => ContentV2Route,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -207,7 +213,7 @@ export interface FileRoutesByFullPath {
   '/content/releases': typeof ContentReleasesRoute
   '/content/results': typeof ContentResultsRoute
   '/content/settings': typeof ContentSettingsRoute
-  '/content/v2': typeof ContentV2Route
+  '/content/v2': typeof ContentV2RouteWithChildren
   '/marketing/ai-content': typeof MarketingAiContentRoute
   '/marketing/in-property': typeof MarketingInPropertyRoute
   '/marketing/invites': typeof MarketingInvitesRoute
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/ota/settings': typeof OtaSettingsRoute
   '/content/': typeof ContentIndexRoute
   '/ota/': typeof OtaIndexRoute
+  '/content/v2/results': typeof ContentV2ResultsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -238,7 +245,7 @@ export interface FileRoutesByTo {
   '/content/releases': typeof ContentReleasesRoute
   '/content/results': typeof ContentResultsRoute
   '/content/settings': typeof ContentSettingsRoute
-  '/content/v2': typeof ContentV2Route
+  '/content/v2': typeof ContentV2RouteWithChildren
   '/marketing/ai-content': typeof MarketingAiContentRoute
   '/marketing/in-property': typeof MarketingInPropertyRoute
   '/marketing/invites': typeof MarketingInvitesRoute
@@ -253,6 +260,7 @@ export interface FileRoutesByTo {
   '/ota/settings': typeof OtaSettingsRoute
   '/content': typeof ContentIndexRoute
   '/ota': typeof OtaIndexRoute
+  '/content/v2/results': typeof ContentV2ResultsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -271,7 +279,7 @@ export interface FileRoutesById {
   '/content/releases': typeof ContentReleasesRoute
   '/content/results': typeof ContentResultsRoute
   '/content/settings': typeof ContentSettingsRoute
-  '/content/v2': typeof ContentV2Route
+  '/content/v2': typeof ContentV2RouteWithChildren
   '/marketing/ai-content': typeof MarketingAiContentRoute
   '/marketing/in-property': typeof MarketingInPropertyRoute
   '/marketing/invites': typeof MarketingInvitesRoute
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/ota/settings': typeof OtaSettingsRoute
   '/content/': typeof ContentIndexRoute
   '/ota/': typeof OtaIndexRoute
+  '/content/v2/results': typeof ContentV2ResultsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/ota/settings'
     | '/content/'
     | '/ota/'
+    | '/content/v2/results'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/ota/settings'
     | '/content'
     | '/ota'
+    | '/content/v2/results'
   id:
     | '__root__'
     | '/'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/ota/settings'
     | '/content/'
     | '/ota/'
+    | '/content/v2/results'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -401,7 +413,7 @@ export interface RootRouteChildren {
   ContentReleasesRoute: typeof ContentReleasesRoute
   ContentResultsRoute: typeof ContentResultsRoute
   ContentSettingsRoute: typeof ContentSettingsRoute
-  ContentV2Route: typeof ContentV2Route
+  ContentV2Route: typeof ContentV2RouteWithChildren
   MarketingAiContentRoute: typeof MarketingAiContentRoute
   MarketingInPropertyRoute: typeof MarketingInPropertyRoute
   MarketingInvitesRoute: typeof MarketingInvitesRoute
@@ -623,6 +635,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OtaSettingsRouteImport
       parentRoute: typeof OtaRoute
     }
+    '/content/v2/results': {
+      id: '/content/v2/results'
+      path: '/results'
+      fullPath: '/content/v2/results'
+      preLoaderRoute: typeof ContentV2ResultsRouteImport
+      parentRoute: typeof ContentV2Route
+    }
   }
 }
 
@@ -648,6 +667,18 @@ const OtaRouteChildren: OtaRouteChildren = {
 
 const OtaRouteWithChildren = OtaRoute._addFileChildren(OtaRouteChildren)
 
+interface ContentV2RouteChildren {
+  ContentV2ResultsRoute: typeof ContentV2ResultsRoute
+}
+
+const ContentV2RouteChildren: ContentV2RouteChildren = {
+  ContentV2ResultsRoute: ContentV2ResultsRoute,
+}
+
+const ContentV2RouteWithChildren = ContentV2Route._addFileChildren(
+  ContentV2RouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
@@ -664,7 +695,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContentReleasesRoute: ContentReleasesRoute,
   ContentResultsRoute: ContentResultsRoute,
   ContentSettingsRoute: ContentSettingsRoute,
-  ContentV2Route: ContentV2Route,
+  ContentV2Route: ContentV2RouteWithChildren,
   MarketingAiContentRoute: MarketingAiContentRoute,
   MarketingInPropertyRoute: MarketingInPropertyRoute,
   MarketingInvitesRoute: MarketingInvitesRoute,
