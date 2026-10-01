@@ -22,7 +22,7 @@ const MONTH_COPY: Record<number, { subject: string; heading: string; body: strin
   0: { subject: "{first_name}, a new year in New York", heading: "Start the year in the city", body: "January in Midtown is calm, bright and full of possibilities. Your room above Times Square is waiting whenever you're ready. Book direct for our best rate and a warm welcome at check-in." },
 };
 
-function generateCopy(month: number, tone: string, direction: string, seasonal: string | null, note: string): PeriodCopy {
+export function generateCopy(month: number, tone: string, direction: string, seasonal: string | null, note: string): PeriodCopy {
   const base = MONTH_COPY[month] ?? MONTH_COPY[9];
   let body = base.body;
   if (tone === "concise") body = body.split("—")[0].trim() + ". Book now for our best rate.";
@@ -112,7 +112,7 @@ export function V2Workspace() {
             {selected.aiAssisted && selected.preferences && <div className="flex flex-wrap items-start gap-3 border-l-2 border-brand bg-brand-soft/30 px-4 py-3 text-[12px]"><Sparkles size={15} className="mt-0.5 shrink-0 text-brand" /><div><p className="font-semibold text-card-foreground">How this version was written</p><p className="mt-0.5 text-muted-foreground">Tone: {selected.preferences.tone} · Direction: {selected.preferences.direction}{selected.preferences.note ? ` · “${selected.preferences.note}”` : ""}{selected.preferences.context ? ` · Inspired by: ${selected.preferences.context}` : ""}</p></div></div>}
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{invites.map((campaign) => {
               const libraryCampaign = libraryCampaigns.find((item) => EDITOR_ID[item.id] === campaign.id);
-              const text = campaign.id === "after-last-visit" ? selected.copy.text : libraryCampaign && pack ? packageSnippet(libraryCampaign, pack, "direct") : campaign.direct.text;
+              const text = campaign.id === "after-last-visit" ? selected.copy.text : libraryCampaign && pack ? packageSnippet(libraryCampaign, pack, "direct") : campaign.direct.text.message;
               const email = campaign.id === "after-last-visit" ? selected.copy.email : libraryCampaign?.content.direct.email;
               return <article key={campaign.id} className="flex min-h-[240px] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-card transition-colors hover:border-brand/30">
                 <div className="flex-1 p-4"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-soft text-brand">{campaign.strategy === "text" ? <MessageSquare size={15} /> : <Mail size={15} />}</span><div className="min-w-0"><h4 className="text-[14px] font-semibold text-card-foreground">{campaign.name}</h4><p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground"><Clock3 size={12} />{campaign.timing}</p></div></div><div className="mt-4 rounded-md bg-canvas p-3"><p className="text-[10px] font-semibold uppercase text-muted-foreground">Text preview</p><p className="mt-1 line-clamp-3 text-[12px] leading-relaxed text-card-foreground">“{fill(text)}”</p></div></div>
