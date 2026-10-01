@@ -78,7 +78,7 @@ export function V2Results({ onImprove }: { onImprove: (learning: string) => void
             </div>
           </section>
 
-          {alv && improvementLearning && (
+          {alv?.prior && improvementLearning && (
             <section className="rounded-lg border border-border bg-card p-4 shadow-card sm:p-5">
               <div className="flex flex-wrap items-start gap-3">
                 <span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-soft text-brand"><TrendingUp size={16} /></span>
