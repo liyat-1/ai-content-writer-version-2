@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, CalendarRange, Check, Circle, Infinity as InfinityIcon, PartyPopper, Plus, Sparkle, Trash2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Circle, PartyPopper, Plus, Sparkle, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sparkle as SparkIcon } from "@/components/ai/Sparkle";
@@ -62,9 +62,6 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
     setSeasonalUsed(null);
     setSeasonalRemoved(false);
   }, [selected, setup.recommendedId]);
-
-  const extendOptions = periodOptions.filter((p) => p.id !== selected[0]);
-  const fullYear = selected.length >= periodOptions.length;
 
   const startGenerate = () => {
     setStep("generating");
@@ -136,7 +133,7 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
               <div className="mx-auto max-w-2xl space-y-5">
               <div>
                 <h3 className="text-[19px] font-semibold text-card-foreground">What would you like to update?</h3>
-                <p className="mt-1 text-[12.5px] text-muted-foreground">The next period still uses year-round content. Choose when you want something fresh.</p>
+                <p className="mt-1 text-[12.5px] text-muted-foreground">Upcoming periods still use year-round content. Choose when you want something fresh.</p>
               </div>
               {learning && <div className="rounded-md border border-brand/25 bg-brand-soft/50 px-4 py-3 text-[12px] text-card-foreground"><Sparkle size={13} className="mr-1.5 inline text-brand" />{learning}</div>}
               <Button variant="outline" onClick={() => setSelected([recommended.id])} className={`block h-auto w-full whitespace-normal p-4 text-left ${selected[0] === recommended.id ? "border-brand bg-brand-soft/40" : "border-border bg-card"}`}>
@@ -145,22 +142,6 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
                 <p className="mt-1 text-[12px] text-muted-foreground">{recommended.blurb}</p>
               </Button>
               <div className="flex flex-wrap gap-2">{periodOptions.filter((option) => option.id !== recommended.id).map((option) => <Button key={option.id} variant={selected[0] === option.id ? "brand" : "outline"} size="sm" onClick={() => setSelected([option.id])}>{option.label}</Button>)}</div>
-              <div className="rounded-lg border border-border bg-card p-4">
-                <p className="flex items-center gap-2 text-[13.5px] font-semibold text-card-foreground"><CalendarRange size={15} className="text-brand" />Extend this update</p>
-                <p className="mt-1 text-[12px] text-muted-foreground">Refresh content for additional upcoming months so your automated invites stay fresh further into the year.</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {extendOptions.map((p) => (
-                    <Button key={p.id} variant={selected.includes(p.id) ? "brand" : "outline"} size="sm" onClick={() => setSelected((cur) => [cur[0], ...cur.slice(1).includes(p.id) ? [] : [p.id]])}>
-                      {p.short}
-                    </Button>
-                  ))}
-                </div>
-                {selected.length > 1 && <p className="mt-2 text-[11px] text-muted-foreground">{selected.map((id) => periodOptions.find((p) => p.id === id)?.short).join(" → ")} — you can stop at any point.</p>}
-              </div>
-              <Button variant="outline" onClick={() => setSelected(periodOptions.map((p) => p.id))} className={`block h-auto w-full whitespace-normal p-4 text-left ${fullYear ? "border-brand bg-brand-soft/40" : "border-border bg-card"}`}>
-                <p className="flex items-center gap-2 text-[13.5px] font-semibold text-card-foreground"><InfinityIcon size={15} className="text-brand" />Full year</p>
-                <p className="mt-1 text-[12px] text-muted-foreground">Refresh your automated invite content across the year — one simple update, no month-by-month setup.</p>
-              </Button>
             </div>
           )}
 
@@ -350,16 +331,6 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
               <div>
                 <h3 className="text-[20px] font-semibold text-card-foreground">{first.label} is published</h3>
                 <p className="mt-1.5 text-[13px] text-muted-foreground">12 / 31 properties using this content. You can check performance in Results at any time.</p>
-              </div>
-              <div className="rounded-lg border border-border bg-card p-4 text-left">
-                <p className="text-[13.5px] font-semibold text-card-foreground">Would you like to extend this further?</p>
-                <p className="mt-1 text-[12px] text-muted-foreground">Refresh your content for the next few months now, so you don't have to come back later.</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {extendOptions.filter((p) => p.id === periodOptions[periodOptions.findIndex((o) => o.id === first.id) + 1]?.id).map((p) => (
-                    <Button key={p.id} size="sm" variant="outline" onClick={() => { setSelected([p.id, ...selected.filter((id) => id !== p.id)]); setStep("when"); }}>Update {p.short}</Button>
-                  ))}
-                  <Button size="sm" variant="outline" onClick={() => { setSelected(periodOptions.slice(periodOptions.findIndex((o) => o.id === first.id) + 1).map((p) => p.id)); setStep("when"); }}>Update the rest of the year</Button>
-                </div>
               </div>
               <Button variant="brand" onClick={onClose}>I'm done for now</Button>
             </div>
