@@ -1,17 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, CalendarRange, Check, Circle, Infinity as InfinityIcon, PartyPopper, Plus, Sparkle, Trash2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarRange, Check, Circle, Infinity as InfinityIcon, PartyPopper, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sparkle as SparkIcon } from "@/components/ai/Sparkle";
-import { EmailMock } from "@/components/content/shared";
+import { EmailMock, fill } from "@/components/content/shared";
 import { SmsPreview } from "@/components/editor/SmsPreview";
-import { fill } from "@/components/content/shared";
-import { IMAGES } from "@/components/content/shared";
-import {
-  DIRECTIONS, HOTEL, MONTH_PACKAGES_FALLBACK, TONES, seasonalFor, monthName,
-  type PeriodCopy, type SeasonalSuggestion,
-} from "./flowHelpers";
-import type { MonthPerformance } from "@/lib/contentV2";
+import { DIRECTIONS, HOTEL, TONES, monthName, seasonalFor, type PeriodCopy, type SeasonalSuggestion } from "@/lib/contentV2";
 
 export type FlowSetup = { recommendedId: string; context?: string };
 
@@ -28,7 +22,7 @@ const STEP_LABELS: { id: StepId; label: string }[] = [
 
 type Props = {
   setup: FlowSetup;
-  periodOptions: { id: string; label: string; dateRange: string; blurb: string; month: number }[];
+  periodOptions: { id: string; label: string; short: string; dateRange: string; blurb: string; month: number }[];
   baseCopy: PeriodCopy;
   aiCopy: (args: { month: number; tone: string; direction: string; seasonal: SeasonalSuggestion | null; note: string; extendIds: string[] }) => PeriodCopy[];
   performanceFor?: (month: number) => MonthPerformance | undefined;
