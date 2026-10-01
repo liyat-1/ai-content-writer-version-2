@@ -12,7 +12,7 @@ type CampaignResult = {
 
 const CAMPAIGN_RESULTS: Record<string, CampaignResult[]> = {
   "2026-08": [
-    { id: "alv", name: "After Last Visit", properties: 4, click: 4.1, clickDelta: 0.7, ctb: 1.9, ctbDelta: 0.4, aiInsight: "The August version outperformed July with guests who stayed 2+ nights — the parade hook in the subject drove the strongest opens of the quarter.", prior: { label: "July 2026", click: 3.4, ctb: 1.5 }, priorBetter: false },
+    { id: "alv", name: "After Last Visit", properties: 4, click: 4.1, clickDelta: 0.7, ctb: 1.9, ctbDelta: 0.4, aiInsight: "The August version outperformed July with guests who stayed 2+ nights — its concise invitation and direct-booking CTA worked well.", prior: { label: "July 2026", click: 3.4, ctb: 1.5 }, priorBetter: false },
     { id: "welcome", name: "Pre-Arrival Welcome", properties: 4, click: 3.2, clickDelta: -0.3, ctb: 1.1, ctbDelta: -0.2, aiInsight: "Slightly below July — send time may be a factor. Try 10:00 AM instead of 8:00 AM for leisure guests.", prior: { label: "July 2026", click: 3.5, ctb: 1.3 }, priorBetter: false },
   ],
   "2026-09": [
@@ -87,8 +87,8 @@ export function V2Results({ onImprove }: { onImprove: (learning: string) => void
                   <p className="text-[14px] font-semibold text-card-foreground">{alv.prior.label} content did better</p>
                    <p className="mt-0.5 text-[12.5px] text-muted-foreground">{alv.prior.label} clicked {alv.prior.click}% vs {alv.click}% for {alv.name}. Review both messages, then use what worked to write the next version.</p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Button size="sm" variant="brand" onClick={() => onImprove(improvementLearning)}><Sparkle size={13} />Improve with AI<ArrowRight size={13} /></Button>
                     <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)}>Review {alv.prior.label} version</Button>
+                   <Button size="sm" variant="brand" onClick={() => onImprove(improvementLearning)}><Sparkle size={13} />Improve with AI<ArrowRight size={13} /></Button>
                   </div>
                 </div>
               </div>
