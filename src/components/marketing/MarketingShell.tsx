@@ -17,6 +17,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
+  Sparkle,
   FlaskConical,
   History,
   Settings2,
@@ -49,6 +50,7 @@ const GROUPS: { label?: string; items: Item[] }[] = [
     label: "Content Library",
     items: [
       { label: "Content", to: "/content", icon: Sparkles },
+      { label: "Library V2", to: "/content/v2", icon: Sparkle },
       { label: "Events & Holidays", to: "/content/events", icon: CalendarDays },
       { label: "Results", to: "/content/results", icon: BarChart3 },
       { label: "Settings", to: "/content/settings", icon: Settings2 },
@@ -69,6 +71,7 @@ const MOBILE_NAV = [
   { label: "In-property", to: "/marketing/in-property" },
   { label: "Media", to: "/marketing/media" },
   { label: "Content", to: "/content" },
+  { label: "Library V2", to: "/content/v2" },
   { label: "Events", to: "/content/events" },
   { label: "Results", to: "/content/results" },
   { label: "Promotions", to: "/marketing/promotions" },

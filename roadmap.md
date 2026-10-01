@@ -268,3 +268,12 @@
 - [x] Replace the misleading previous-version toast with sample historical copy review and comparison
 - [x] Let AI propose a current, relevant rewrite inspired by the stronger past copy; save only after review
 - [x] Verify both pages and the review flow at desktop and narrow widths
+
+## Content Library V2 (separate, simplified)
+
+- [x] Data layer: V2 periods, publish/use-historical actions, seasonal + tone/direction helpers
+- [x] Guided AI refresh flow: choose when → how → review plan → generate → review/compare/insight → publish → done/extend
+- [x] V2 page: AI-refresh intro (Learn how / Update with AI / Keep current), current-content timer, contextual pusher, month-based published content with content/properties/version dialogs
+- [x] V2 results: overview + campaigns, month navigation, AI insight, prior-better card with Improve with AI / Review historical version comparison
+- [x] Route /content/v2 with head metadata; Library V2 nav entries (desktop + mobile)
+- [x] Typecheck clean; verify in preview, no console errors

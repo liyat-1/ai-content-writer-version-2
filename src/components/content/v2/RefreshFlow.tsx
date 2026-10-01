@@ -3,15 +3,9 @@ import { ArrowLeft, ArrowRight, CalendarRange, Check, Circle, Infinity as Infini
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sparkle as SparkIcon } from "@/components/ai/Sparkle";
-import { EmailMock } from "@/components/content/shared";
+import { EmailMock, fill } from "@/components/content/shared";
 import { SmsPreview } from "@/components/editor/SmsPreview";
-import { fill } from "@/components/content/shared";
-import { IMAGES } from "@/components/content/shared";
-import {
-  DIRECTIONS, HOTEL, MONTH_PACKAGES_FALLBACK, TONES, seasonalFor, monthName,
-  type PeriodCopy, type SeasonalSuggestion,
-} from "./flowHelpers";
-import type { MonthPerformance } from "@/lib/contentV2";
+import { DIRECTIONS, HOTEL, TONES, monthName, seasonalFor, type MonthPerformance, type PeriodCopy, type SeasonalSuggestion } from "@/lib/contentV2";
 
 export type FlowSetup = { recommendedId: string; context?: string };
 
@@ -28,7 +22,7 @@ const STEP_LABELS: { id: StepId; label: string }[] = [
 
 type Props = {
   setup: FlowSetup;
-  periodOptions: { id: string; label: string; dateRange: string; blurb: string; month: number }[];
+  periodOptions: { id: string; label: string; short: string; dateRange: string; blurb: string; month: number }[];
   baseCopy: PeriodCopy;
   aiCopy: (args: { month: number; tone: string; direction: string; seasonal: SeasonalSuggestion | null; note: string; extendIds: string[] }) => PeriodCopy[];
   performanceFor?: (month: number) => MonthPerformance | undefined;
@@ -56,7 +50,7 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
   const recommended = periodOptions.find((p) => p.id === setup.recommendedId) ?? periodOptions[0];
   const first = periodOptions.find((p) => p.id === selected[0]) ?? recommended;
   const suggestion = useMemo(() => (selected.length ? seasonalFor(first.month) : null), [first, selected.length]);
-  const suggestionLive = seasonalUsed !== null ? seasonalUsed : (!seasonalRemoved && suggestion);
+  const suggestionLive: SeasonalSuggestion | null = seasonalUsed !== null ? seasonalUsed : (!seasonalRemoved ? suggestion : null);
 
   // Keep the seasonal suggestion in sync when the period changes and the hotel hasn't decided yet.
   useEffect(() => { setSeasonalUsed(null); setSeasonalRemoved(false); }, [selected[0]]);
@@ -350,7 +344,7 @@ export function RefreshFlow({ setup, periodOptions, baseCopy, aiCopy, performanc
 
         {step !== "generating" && step !== "done" && (
           <footer className="flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3 sm:px-6">
-            <Button variant="ghost" disabled={step === "when"} onClick={() => setStep(step === "review" && generated.length ? "generating" : step === "generating" ? "plan" : step === "review" ? "plan" : step === "publishing" ? "review" : step === "plan" ? "how" : "when")}>
+            <Button variant="ghost" disabled={step === "when"} onClick={() => setStep(step === "review" && generated.length ? "generating" : step === "review" ? "plan" : step === "publishing" ? "review" : step === "plan" ? "how" : "when")}>
               <ArrowLeft size={14} />Back
             </Button>
             {step === "when" && <Button variant="brand" disabled={!selected.length} onClick={() => setStep("how")}>Continue<ArrowRight size={14} /></Button>}

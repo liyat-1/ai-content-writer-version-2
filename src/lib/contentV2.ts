@@ -5,6 +5,12 @@
  */
 import { useSyncExternalStore } from "react";
 
+export const RESULTS_MONTHS = [
+  { id: "2026-08", label: "August 2026", click: 4.1, clickDelta: 0.7, ctb: 1.9, ctbDelta: 0.4, sends: "1,842", sendsDelta: "+3% vs July", aiSummary: "August was the strongest month of the quarter — the seasonal hook in After Last Visit drove the best click rate. Worth carrying that pattern forward." },
+  { id: "2026-09", label: "September 2026", click: 3.8, clickDelta: -0.3, ctb: 1.6, ctbDelta: -0.3, sends: "1,905", sendsDelta: "+3% vs August", aiSummary: "A small dip after August's strong month as the seasonal hook faded. A fresh reason-to-return angle should lift After Last Visit again." },
+  { id: "2026-10", label: "October 2026", click: 3.6, clickDelta: -0.2, ctb: 1.5, ctbDelta: -0.1, sends: "1,968", sendsDelta: "+3% vs September", aiSummary: "The current version is holding steady, but August's parade-themed version still holds the quarter's best click rate — a good direction for the next update." },
+];
+
 /* ------------------------------ types ------------------------------ */
 
 export type EmailCopy = { subject: string; preheader: string; heading: string; body: string; cta: string };
