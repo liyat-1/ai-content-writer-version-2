@@ -51,6 +51,7 @@ const GROUPS: { label?: string; items: Item[] }[] = [
     items: [
       { label: "Content", to: "/content", icon: Sparkles },
       { label: "Library V2", to: "/content/v2", icon: Sparkle },
+       { label: "Results V2", to: "/content/v2/results", icon: BarChart3 },
       { label: "Events & Holidays", to: "/content/events", icon: CalendarDays },
       { label: "Results", to: "/content/results", icon: BarChart3 },
       { label: "Settings", to: "/content/settings", icon: Settings2 },
@@ -72,6 +73,7 @@ const MOBILE_NAV = [
   { label: "Media", to: "/marketing/media" },
   { label: "Content", to: "/content" },
   { label: "Library V2", to: "/content/v2" },
+  { label: "Results V2", to: "/content/v2/results" },
   { label: "Events", to: "/content/events" },
   { label: "Results", to: "/content/results" },
   { label: "Promotions", to: "/marketing/promotions" },
