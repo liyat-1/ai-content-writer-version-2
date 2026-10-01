@@ -122,7 +122,7 @@ const PERIODS: Period[] = [
     id: "2026-10", label: "October 2026", short: "October", status: "Current", aiAssisted: true,
     originLabel: "AI-assisted update", publishedAt: "Sep 20, 2026", updatedDaysAgo: 30,
     properties: 12, copy: octoberCopy,
-    performance: { click: 6.2, clickDelta: 2.4, ctb: 2.8, clickDelta2: 0, spam: 0.4, spamDelta: -0.2, ctbDelta: 0.6 } as MonthPerformance,
+    performance: { click: 6.2, clickDelta: 2.4, ctb: 2.8, ctbDelta: 0.6, spam: 0.4, spamDelta: -0.2 },
     insight: {
       changed: ["Shortened the message", "Made the CTA more direct", "Added light October seasonal context"],
       why: "Previous content with shorter messaging and clearer calls to action showed stronger engagement, so AI applied those patterns to the current version.",
