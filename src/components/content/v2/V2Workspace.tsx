@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Info, Sparkle, Users, X } from "lucide-react";
+import { useState } from "react";
+import { CalendarDays, ChevronLeft, ChevronRight, Info, Sparkle, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmailMock, fill } from "@/components/content/shared";

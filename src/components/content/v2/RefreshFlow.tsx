@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Sparkle as SparkIcon } from "@/components/ai/Sparkle";
 import { EmailMock, fill } from "@/components/content/shared";
 import { SmsPreview } from "@/components/editor/SmsPreview";
-import { DIRECTIONS, HOTEL, TONES, monthName, seasonalFor, type PeriodCopy, type SeasonalSuggestion } from "@/lib/contentV2";
+import { DIRECTIONS, HOTEL, TONES, monthName, seasonalFor, type MonthPerformance, type PeriodCopy, type SeasonalSuggestion } from "@/lib/contentV2";
 
 export type FlowSetup = { recommendedId: string; context?: string };
 

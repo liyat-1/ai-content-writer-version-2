@@ -2,8 +2,8 @@ import { useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Sparkle, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AiMark, EmailMock, fill } from "@/components/content/shared";
-import { AUGUST_ALV, HOTEL, RESULTS_MONTHS, type MonthPerformance } from "@/lib/contentV2";
+import { AiMark, EmailMock } from "@/components/content/shared";
+import { AUGUST_ALV, RESULTS_MONTHS } from "@/lib/contentV2";
 
 type CampaignResult = {
   id: string; name: string; properties: number; click: number; clickDelta: number; ctb: number; ctbDelta: number;
